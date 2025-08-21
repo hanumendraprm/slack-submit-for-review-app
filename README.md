@@ -33,7 +33,7 @@ A comprehensive Slack application built with Slack Bolt framework that streamlin
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/slack-submit-for-review-app.git
+git clone https://github.com/hanumendraprm/slack-submit-for-review-app.git
 cd slack-submit-for-review-app
 ```
 
