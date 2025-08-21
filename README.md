@@ -1,248 +1,186 @@
-# Slack Content Review Workflow App
+# Slack Submit for Review App
 
-A Slack app built with Bolt that streamlines the content review process. This app provides a structured workflow for submitting content for review, tracking approvals, and managing feedback.
+A comprehensive Slack application built with Slack Bolt framework that streamlines content review workflows with Google Sheets integration.
 
-## Features
+## 🚀 Features
 
-- **Global Shortcut**: "Submit for Review" shortcut accessible from any channel
-- **Structured Form**: Collects Asset Code, Topic, Asset Name, Draft Link, and Additional Notes
-- **Google Sheets Integration**: Auto-fills form data and updates sheet status
-- **Formatted Messages**: Posts beautifully formatted review requests to your target channel
-- **Review Workflow**: Approve/Need Changes buttons with threaded responses
-- **Feedback Collection**: Modal for collecting detailed feedback when changes are needed
-- **Error Handling**: Comprehensive error handling and validation
+### Core Functionality
+- **Global Shortcut**: "Submit for Review" accessible in private channels
+- **Smart Form**: Auto-fills Topic and Asset Name from Google Sheets
+- **Review Workflow**: Approve/Need Changes buttons with comments
+- **Thread Management**: All communications happen in organized threads
 
-## Workflow
+### Google Sheets Integration
+- **Automatic Data Fetching**: Retrieves Topic and Asset Name based on Asset Code
+- **Status Tracking**: Updates asset status (Draft → Review → Finalized)
+- **Timestamp Updates**: Automatically updates "Last Updated" column
+- **Error Handling**: Graceful fallbacks when Google Sheets is unavailable
 
-1. User clicks "Submit for Review" shortcut
-2. Modal opens with form fields
-3. Upon submission, formatted message is posted to target channel
-4. Reviewers can click "Approve" or "Need Changes"
-5. Approvals are recorded in thread
-6. Change requests open feedback modal and post feedback in thread
+### Enhanced User Experience
+- **Pre-filled Forms**: Asset Code auto-population from feedback
+- **Validation**: URL validation and required field checking
+- **Ephemeral Messages**: Clean interface with user-only confirmations
+- **Error Recovery**: Comprehensive error handling and user feedback
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js 16+ installed
-- A Slack workspace with admin permissions
-- A Slack app created at https://api.slack.com/apps
+- Node.js (v16 or higher)
+- Slack Workspace with admin permissions
+- Google Cloud Project (for Google Sheets integration)
+- Google Service Account (for API access)
 
-## Setup Instructions
+## 🛠️ Installation
 
-### 1. Create a Slack App
+### 1. Clone the Repository
+```bash
+git clone https://github.com/YOUR_USERNAME/slack-submit-for-review-app.git
+cd slack-submit-for-review-app
+```
 
-1. Go to https://api.slack.com/apps
-2. Click "Create New App" → "From scratch"
-3. Name your app (e.g., "Content Review Workflow")
-4. Select your workspace
-
-### 2. Configure App Settings
-
-#### Basic Information
-- Note your **Signing Secret** (you'll need this later)
-
-#### Socket Mode
-- Enable Socket Mode
-- Create an App-Level Token with `connections:write` scope
-- Note your **App Token** (starts with `xapp-`)
-
-#### OAuth & Permissions
-- Add the following Bot Token Scopes:
-  - `chat:write` - Post messages
-  - `chat:write.public` - Post to public channels
-  - `channels:read` - Read channel information
-  - `groups:read` - Read private channels
-  - `users:read` - Read user information
-- Install the app to your workspace
-- Copy the **Bot User OAuth Token** (starts with `xoxb-`)
-
-#### Global Shortcuts
-- Go to "Interactivity & Shortcuts"
-- Enable Interactivity
-- Add a Global Shortcut:
-  - Name: "Submit for Review"
-  - Callback ID: `submit_for_review_shortcut`
-  - Description: "Submit content for review"
-
-#### Event Subscriptions
-- Enable Events API
-- Subscribe to bot events:
-  - `message.channels` (if posting to public channels)
-  - `message.groups` (if posting to private channels)
-
-### 3. Install Dependencies
-
+### 2. Install Dependencies
 ```bash
 npm install
 ```
 
-### 4. Configure Environment
-
-1. Copy the example environment file:
-   ```bash
-   cp env.example .env
-   ```
-
-2. Edit `.env` with your Slack app credentials:
-   ```env
-   SLACK_BOT_TOKEN=xoxb-your-bot-token-here
-   SLACK_SIGNING_SECRET=your-signing-secret-here
-   SLACK_APP_TOKEN=xapp-your-app-token-here
-   CHANNEL_NAME=production-ems-in8code-gwunspoken
-   ```
-
-### 5. Invite Bot to Target Channel
-
-Invite your bot to the target private channel:
-```
-/invite @YourBotName
-```
-
-### 6. Run the App
-
+### 3. Environment Setup
 ```bash
-npm start
+# Copy environment template
+cp env.example .env
+
+# Run interactive setup
+npm run setup
 ```
 
-The app will start on port 3000 (or the port specified in your `.env` file).
+### 4. Configure Slack App
+1. Go to [Slack API Apps](https://api.slack.com/apps)
+2. Create a new app or use existing one
+3. Configure the following:
+   - **Socket Mode**: Enable and get App-Level Token
+   - **Bot Token Scopes**: `commands`, `chat:write`, `groups:read`
+   - **Global Shortcuts**: Add "Submit for Review" shortcut
+   - **Install App**: Install to your workspace
 
-## Usage
+### 5. Configure Google Sheets (Optional)
+See [Google Sheets Setup Guide](GOOGLE_SHEETS_SETUP.md) for detailed instructions.
 
-### Submitting for Review
+## 🔧 Configuration
 
-1. In any Slack channel, click the lightning bolt icon (⚡️)
-2. Select "Submit for Review" from the shortcuts menu
-3. Fill out the form:
-   - **Asset Code**: Unique identifier (e.g., ASSET-001)
-   - **Topic**: Content topic (e.g., Product Launch)
-   - **Asset Name**: Descriptive name (e.g., Q1 Product Launch Video)
-   - **Draft Link**: URL to the draft content
-   - **Additional Notes**: Optional context or notes
-4. Click "Submit"
-
-### Reviewing Content
-
-When a review request is posted:
-
-1. **To Approve**: Click the green "Approve" button
-   - An approval message will be posted in the thread
-
-2. **To Request Changes**: Click the red "Need Changes" button
-   - A feedback modal will open
-   - Enter specific, actionable feedback
-   - Click "Submit Feedback"
-   - Your feedback will be posted in the thread
-
-## Deployment
-
-### Local Development
-
-```bash
-npm start
-```
-
-### Production Deployment
-
-#### Option 1: Heroku
-
-1. Create a Heroku app
-2. Set environment variables in Heroku dashboard
-3. Deploy:
-   ```bash
-   git push heroku main
-   ```
-
-#### Option 2: Railway
-
-1. Connect your GitHub repo to Railway
-2. Set environment variables in Railway dashboard
-3. Deploy automatically on push
-
-#### Option 3: DigitalOcean App Platform
-
-1. Create a new app in DigitalOcean
-2. Connect your GitHub repo
-3. Set environment variables
-4. Deploy
-
-### Environment Variables for Production
-
-Make sure to set these in your deployment platform:
-
-- `SLACK_BOT_TOKEN`
-- `SLACK_SIGNING_SECRET`
-- `SLACK_APP_TOKEN`
-- `CHANNEL_NAME` or `CHANNEL_ID`
-- `PORT` (optional, defaults to 3000)
-
-#### Google Sheets Integration (Optional)
-- `GOOGLE_SHEET_ID` - Your Google Sheet ID
-- `GOOGLE_SERVICE_ACCOUNT_KEY` - Service account JSON key
-- `GOOGLE_SHEET_RANGE` - Sheet range (default: Sheet1!A:L)
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"Could not find private channel"**
-   - Ensure the bot is invited to the target channel
-   - Verify the channel name is correct in `.env`
-
-2. **"Missing required environment variables"**
-   - Check that all required variables are set in `.env`
-   - Verify the values are correct (no extra spaces)
-
-3. **"Error opening modal"**
-   - Ensure the shortcut is properly configured in Slack app settings
-   - Check that the callback ID matches exactly
-
-4. **Messages not posting**
-   - Verify the bot has the required scopes
-   - Check that the bot is invited to the target channel
-
-### Debug Mode
-
-To enable debug logging, add this to your `.env`:
+### Environment Variables
 
 ```env
-DEBUG=@slack/bolt:*
+# Slack Configuration
+SLACK_BOT_TOKEN=xoxb-your-bot-token
+SLACK_SIGNING_SECRET=your-signing-secret
+SLACK_APP_TOKEN=xapp-your-app-token
+
+# Channel Configuration
+CHANNEL_NAME=production-ems-in8code-gwunspoken
+# OR
+CHANNEL_ID=C09ABPWMUEN
+
+# Google Sheets Integration (Optional)
+GOOGLE_SHEET_ID=your-google-sheet-id
+GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
+GOOGLE_SHEET_RANGE=Sheet1!A:Z
 ```
 
-## Customization
+## 🚀 Usage
 
-### Changing the Target Channel
+### Starting the App
+```bash
+# Development mode
+npm run dev
 
-Update the `CHANNEL_NAME` or `CHANNEL_ID` in your `.env` file.
+# Production mode
+npm start
+```
 
-### Modifying the Message Format
+### Using the App
+1. **Submit for Review**: Use lightning bolt (⚡️) → "Submit for Review"
+2. **Enter Asset Code**: Type asset code (e.g., "GW1", "GW2")
+3. **Fetch Details**: Click "Fetch Details" to auto-fill Topic and Asset Name
+4. **Add Draft Link**: Enter the draft document URL
+5. **Submit**: Form posts to channel with Approve/Need Changes buttons
 
-Edit the `textLines` array in the `submit_for_review_modal` handler in `app.js`.
+### Review Workflow
+- **Approve**: Opens comments modal → Updates status to "Finalized"
+- **Need Changes**: Opens feedback modal → Updates status to "Draft"
+- **Submit for Review**: From feedback → Pre-fills form for same asset
 
-### Adding New Fields
+## 📊 Google Sheets Structure
 
-1. Add the field to the modal blocks in the shortcut handler
-2. Update the validation function
-3. Include the field in the message formatting
+The app expects a Google Sheet with the following columns:
+- **A**: S.No.
+- **B**: A Code (Asset Code)
+- **C**: Product
+- **D**: Topic
+- **E**: Asset Name
+- **F**: Platform(s)
+- **G**: Status
+- **H**: Assigned To
+- **I**: ETA
+- **J**: Draft Link
+- **K**: Feedback/Comments
+- **L**: Final Link
+- **M**: Last Updated
 
-## Security Considerations
+## 🏗️ Project Structure
 
-- Never commit your `.env` file to version control
-- Use environment variables for all sensitive data
-- Regularly rotate your Slack app tokens
-- Monitor app usage and permissions
+```
+slack-submit-for-review-app/
+├── app.js                 # Main application file
+├── googleSheets.js        # Google Sheets integration
+├── setup.js              # Interactive setup script
+├── package.json          # Dependencies and scripts
+├── env.example           # Environment variables template
+├── .gitignore           # Git ignore rules
+├── README.md            # This file
+├── GOOGLE_SHEETS_SETUP.md    # Google Sheets setup guide
+├── GOOGLE_SHEETS_FEATURES.md # Google Sheets features
+├── QUICK_START.md       # Quick setup guide
+├── PROJECT_SUMMARY.md   # Project overview
+└── DEPLOYMENT.md        # Deployment instructions
+```
 
-## Support
+## 🔍 Troubleshooting
 
-For issues or questions:
+### Common Issues
+1. **"invalid_auth" error**: Check your Slack tokens in `.env`
+2. **"missing_scope" error**: Ensure bot has required permissions
+3. **Google Sheets not updating**: Verify service account has edit access
+4. **Channel not found**: Ensure app is invited to the target channel
 
-1. Check the troubleshooting section above
-2. Review Slack API documentation
-3. Check the app logs for error messages
+### Debug Mode
+```bash
+# Enable debug logging
+DEBUG=* npm start
+```
 
-## Google Sheets Integration
+## 🤝 Contributing
 
-For detailed setup instructions, see [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md).
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📝 License
 
-This project is open source and available under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Slack Bolt Framework](https://slack.dev/bolt-js/) for the excellent Slack app framework
+- [Google Sheets API](https://developers.google.com/sheets/api) for seamless spreadsheet integration
+- [Node.js](https://nodejs.org/) for the runtime environment
+
+## 📞 Support
+
+For support and questions:
+- Create an issue in this repository
+- Check the [troubleshooting section](#troubleshooting)
+- Review the [Google Sheets Setup Guide](GOOGLE_SHEETS_SETUP.md)
+
+---
+
+**Built with ❤️ for streamlined content review workflows**
