@@ -1,12 +1,23 @@
 require('dotenv').config();
 const { App } = require('@slack/bolt');
+const express = require('express');
 const GoogleSheetsService = require('./googleSheets');
+
+// Create Express app for Heroku
+const expressApp = express();
+const port = process.env.PORT || 3000;
+
+// Health check endpoint for Heroku
+expressApp.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   socketMode: true,
-  appToken: process.env.SLACK_APP_TOKEN
+  appToken: process.env.SLACK_APP_TOKEN,
+  receiver: expressApp
 });
 
 let TARGET_CHANNEL_ID = process.env.CHANNEL_ID || null;
@@ -879,12 +890,7 @@ app.error(async (error) => {
   console.error('Unhandled error:', error);
 });
 
-/**
- * Health check endpoint for Heroku
- */
-// Note: Health check is not available in Socket Mode
-// The app will respond to health checks with a simple console log
-console.log('Health check requested - app is running');
+
 
 /**
  * Start the app
@@ -901,14 +907,9 @@ console.log('Health check requested - app is running');
       console.log('⚠️  Google Sheets integration disabled - set GOOGLE_SHEET_ID and GOOGLE_SERVICE_ACCOUNT_KEY to enable');
     }
     
-    await app.start(process.env.PORT || 3000);
-    
-    // For Heroku, we need to bind to the PORT environment variable
-    // Socket Mode apps don't need HTTP server, but Heroku expects it
-    if (process.env.PORT) {
-      console.log('🚀 App started successfully on Heroku');
-    }
-    console.log('⚡️ Bolt app is running on port', process.env.PORT || 3000);
+    await app.start(port);
+    console.log('🚀 App started successfully on Heroku');
+    console.log('⚡️ Bolt app is running on port', port);
     console.log('📋 Target channel:', TARGET_CHANNEL_NAME || TARGET_CHANNEL_ID);
   } catch (error) {
     console.error('Failed to start app:', error);
