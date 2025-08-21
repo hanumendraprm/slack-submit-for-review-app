@@ -1,0 +1,42 @@
+{
+  "name": "slack-review-flow",
+  "version": "1.0.0",
+  "description": "A Slack app for streamlined content review workflow with Google Sheets integration",
+  "main": "app.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"No tests specified\" && exit 0",
+    "lint": "echo \"No linter configured\" && exit 0",
+    "deploy:heroku": "git push heroku main",
+    "deploy:railway": "railway up",
+    "setup": "node setup.js",
+    "setup:manual": "cp env.example .env && echo 'Please edit .env with your Slack app credentials'"
+  },
+  "keywords": [
+    "slack",
+    "bolt",
+    "workflow",
+    "review",
+    "content-management",
+    "google-sheets"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@slack/bolt": "^3.17.1",
+    "dotenv": "^16.4.5",
+    "googleapis": "^128.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "your-repository-url"
+  }
+}
