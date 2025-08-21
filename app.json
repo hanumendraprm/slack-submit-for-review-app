@@ -1,0 +1,55 @@
+{
+  "name": "slack-submit-for-review-app",
+  "description": "A comprehensive Slack application for content review workflows with Google Sheets integration",
+  "repository": "https://github.com/hanumendraprm/slack-submit-for-review-app",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["slack", "bolt", "google-sheets", "content-review", "workflow"],
+  "env": {
+    "SLACK_BOT_TOKEN": {
+      "description": "Your Slack Bot User OAuth Token (starts with xoxb-)",
+      "required": true
+    },
+    "SLACK_SIGNING_SECRET": {
+      "description": "Your Slack App Signing Secret",
+      "required": true
+    },
+    "SLACK_APP_TOKEN": {
+      "description": "Your Slack App-Level Token (starts with xapp-)",
+      "required": true
+    },
+    "CHANNEL_NAME": {
+      "description": "Target Slack channel name (e.g., production-ems-in8code-gwunspoken)",
+      "required": false
+    },
+    "CHANNEL_ID": {
+      "description": "Target Slack channel ID (alternative to CHANNEL_NAME)",
+      "required": false
+    },
+    "GOOGLE_SHEET_ID": {
+      "description": "Google Sheet ID (optional, for Google Sheets integration)",
+      "required": false
+    },
+    "GOOGLE_SERVICE_ACCOUNT_KEY": {
+      "description": "Google Service Account JSON key (optional, for Google Sheets integration)",
+      "required": false
+    },
+    "GOOGLE_SHEET_RANGE": {
+      "description": "Google Sheet range (default: Sheet1!A:Z)",
+      "required": false,
+      "value": "Sheet1!A:Z"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "addons": [],
+  "stack": "heroku-22"
+}

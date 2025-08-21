@@ -1,29 +1,36 @@
 {
   "name": "slack-review-flow",
   "version": "1.0.0",
-  "description": "A Slack app for streamlined content review workflow with Google Sheets integration",
+  "description": "A comprehensive Slack application for content review workflows with Google Sheets integration",
   "main": "app.js",
-  "type": "commonjs",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "echo \"No tests specified\" && exit 0",
-    "lint": "echo \"No linter configured\" && exit 0",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "echo \"No linting configured\"",
     "deploy:heroku": "git push heroku main",
     "deploy:railway": "railway up",
     "setup": "node setup.js",
-    "setup:manual": "cp env.example .env && echo 'Please edit .env with your Slack app credentials'"
+    "setup:manual": "echo \"Please manually configure your .env file\""
   },
   "keywords": [
     "slack",
     "bolt",
+    "content-review",
     "workflow",
-    "review",
-    "content-management",
-    "google-sheets"
+    "google-sheets",
+    "automation"
   ],
-  "author": "Your Name",
+  "author": "Hanumendra Mishra",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hanumendraprm/slack-submit-for-review-app.git"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
     "@slack/bolt": "^3.17.1",
     "dotenv": "^16.4.5",
@@ -31,12 +38,5 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.0"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "your-repository-url"
   }
 }

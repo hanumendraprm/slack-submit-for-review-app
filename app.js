@@ -880,6 +880,13 @@ app.error(async (error) => {
 });
 
 /**
+ * Health check endpoint for Heroku
+ */
+app.receiver.app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+/**
  * Start the app
  */
 (async () => {
