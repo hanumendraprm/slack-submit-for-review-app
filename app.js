@@ -3,7 +3,7 @@ const { App } = require('@slack/bolt');
 const express = require('express');
 const GoogleSheetsService = require('./googleSheets');
 
-// Create Express app for Heroku
+// Create Express app for Heroku health checks
 const expressApp = express();
 const port = process.env.PORT || 3000;
 
@@ -16,8 +16,7 @@ const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   socketMode: true,
-  appToken: process.env.SLACK_APP_TOKEN,
-  receiver: expressApp
+  appToken: process.env.SLACK_APP_TOKEN
 });
 
 let TARGET_CHANNEL_ID = process.env.CHANNEL_ID || null;
@@ -907,10 +906,15 @@ app.error(async (error) => {
       console.log('⚠️  Google Sheets integration disabled - set GOOGLE_SHEET_ID and GOOGLE_SERVICE_ACCOUNT_KEY to enable');
     }
     
-    await app.start(port);
-    console.log('🚀 App started successfully on Heroku');
-    console.log('⚡️ Bolt app is running on port', port);
-    console.log('📋 Target channel:', TARGET_CHANNEL_NAME || TARGET_CHANNEL_ID);
+    // Start the Slack app
+    await app.start();
+    console.log('⚡️ Bolt app is running with Socket Mode');
+    
+    // Start Express server for Heroku health checks
+    expressApp.listen(port, () => {
+      console.log('🚀 Express server started on port', port);
+      console.log('📋 Target channel:', TARGET_CHANNEL_NAME || TARGET_CHANNEL_ID);
+    });
   } catch (error) {
     console.error('Failed to start app:', error);
     process.exit(1);
