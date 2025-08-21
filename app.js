@@ -902,6 +902,12 @@ console.log('Health check requested - app is running');
     }
     
     await app.start(process.env.PORT || 3000);
+    
+    // For Heroku, we need to bind to the PORT environment variable
+    // Socket Mode apps don't need HTTP server, but Heroku expects it
+    if (process.env.PORT) {
+      console.log('🚀 App started successfully on Heroku');
+    }
     console.log('⚡️ Bolt app is running on port', process.env.PORT || 3000);
     console.log('📋 Target channel:', TARGET_CHANNEL_NAME || TARGET_CHANNEL_ID);
   } catch (error) {
