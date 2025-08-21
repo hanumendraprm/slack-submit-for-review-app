@@ -35,9 +35,5 @@ jobs:
         heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
         heroku_email: ${{ secrets.HEROKU_EMAIL }}
         appdir: "."
-        healthcheck: "https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/health"
-        checkstring: "ok"
-        delay: "10"
         procfile: "Procfile"
-        rollbackonhealthcheckfailed: true
         usedocker: false
