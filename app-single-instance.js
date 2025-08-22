@@ -1609,7 +1609,25 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*File Upload Instructions for ${resourceType}*\n\n📁 *For files under 10MB:*\n• Use the file upload below\n• Files will be automatically organized in Google Drive\n\n📁 *For larger files (over 10MB):*\n• Upload directly to Google Drive\n• Use this link: <https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Shared Resource Folder>\n• Place files in the \`${resourceType}\` subfolder\n• Files will be automatically organized by asset code\n\n*Note:* Slack has a 10MB file size limit. Large files must be uploaded to Google Drive directly.`
+            text: `📁 *Upload Files to Google Drive*\n\n1️⃣ *Upload your files:*\n• Click this link: <https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Upload to Shared Resource Folder>\n• Navigate to the \`${resourceType}\` subfolder\n• Upload your files\n\n2️⃣ *Get the file link:*\n• Right-click on the uploaded file\n• Select "Get link" or "Share"\n• Copy the link\n\n3️⃣ *Paste the link below:*\n• Paste the Google Drive file link in the input field below`
+          }
+        },
+        {
+          type: 'input',
+          block_id: 'file_link',
+          label: {
+            type: 'plain_text',
+            text: 'Google Drive File Link',
+            emoji: true
+          },
+          element: {
+            type: 'plain_text_input',
+            action_id: 'file_link_input',
+            placeholder: {
+              type: 'plain_text',
+              text: 'https://drive.google.com/file/d/...',
+              emoji: true
+            }
           }
         },
         {
@@ -1617,7 +1635,7 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
           block_id: 'file_upload',
           label: {
             type: 'plain_text',
-            text: 'Upload Small Files (< 10MB)',
+            text: 'Or Upload Small Files (< 10MB)',
             emoji: true
           },
           element: {
@@ -1647,12 +1665,13 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
   try {
     const values = body.view.state.values;
     const files = values.file_upload.file_upload_input.files || [];
+    const fileLink = values.file_link?.file_link_input?.value || '';
     
-    if (files.length === 0) {
+    if (files.length === 0 && !fileLink) {
       await client.chat.postEphemeral({
         channel: body.user.id,
         user: body.user.id,
-        text: '❌ No files were uploaded. Please try again.'
+        text: '❌ Please either upload files or provide a Google Drive file link.'
       });
       return;
     }
@@ -1670,11 +1689,20 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
       console.error('Error parsing asset data from private_metadata:', error);
     }
 
+    // Prepare file information
+    let fileInfo = '';
+    if (files.length > 0) {
+      fileInfo += `*Files Uploaded:* ${files.length} file(s)\n`;
+    }
+    if (fileLink) {
+      fileInfo += `*File Link:* <${fileLink}|📁 View File>\n`;
+    }
+
     // Post a reply in the original thread with asset details and Google Drive link
     const replyMessage = {
       channel: assetData.channelId || body.user.id,
       thread_ts: assetData.messageTs,
-      text: `📁 *RESOURCE UPLOADED*\n\n*Asset Code:* ${assetData.assetCode || 'N/A'}\n*Topic:* ${assetData.topic || 'N/A'}\n*Asset Name:* ${assetData.assetName || 'N/A'}\n*Resource Type:* ${assetData.resourceType || 'N/A'}\n*Files Uploaded:* ${files.length}\n\n📁 *Google Drive Location:*\n<https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Shared Resource Folder> → ${assetData.resourceType || 'Resource'} → ${assetData.assetCode || 'Asset'}\n\n✅ Files have been uploaded and organized in Google Drive.`,
+      text: `📁 *RESOURCE UPLOADED*\n\n*Asset Code:* ${assetData.assetCode || 'N/A'}\n*Topic:* ${assetData.topic || 'N/A'}\n*Asset Name:* ${assetData.assetName || 'N/A'}\n*Resource Type:* ${assetData.resourceType || 'N/A'}\n\n${fileInfo}\n📁 *Google Drive Location:*\n<https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Shared Resource Folder> → ${assetData.resourceType || 'Resource'} → ${assetData.assetCode || 'Asset'}\n\n✅ Files have been uploaded and organized in Google Drive.`,
       blocks: [
         {
           type: 'header',
@@ -1710,13 +1738,20 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
             }
           ]
         },
-        {
+        ...(files.length > 0 ? [{
           type: 'section',
           text: {
             type: 'mrkdwn',
             text: `*Files Uploaded:* ${files.length} file(s)`
           }
-        },
+        }] : []),
+        ...(fileLink ? [{
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*File Link:* <${fileLink}|📁 View File>`
+          }
+        }] : []),
         {
           type: 'section',
           text: {
@@ -1737,10 +1772,19 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
     await client.chat.postMessage(replyMessage);
 
     // Send ephemeral message to user
+    let uploadMessage = '';
+    if (files.length > 0) {
+      uploadMessage += `✅ Successfully uploaded ${files.length} file(s)! `;
+    }
+    if (fileLink) {
+      uploadMessage += `✅ File link added! `;
+    }
+    uploadMessage += 'A reply has been posted in the original thread with all details.';
+
     await client.chat.postEphemeral({
       channel: body.user.id,
       user: body.user.id,
-      text: `✅ Successfully uploaded ${files.length} file(s)! A reply has been posted in the original thread with all details.`
+      text: uploadMessage
     });
 
     // Upload files to Google Drive
