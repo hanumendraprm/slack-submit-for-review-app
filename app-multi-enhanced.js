@@ -730,6 +730,328 @@ resourceApp.action('fetch_details_btn_resource', async ({ ack, body, client }) =
   }
 });
 
+// Review App: Submit for Review modal
+reviewApp.view('submit_for_review_modal', async ({ ack, view, body, client }) => {
+  try {
+    const values = view.state.values;
+    const assetCode = values.asset_code?.asset_code_input?.value?.trim();
+    const topic = values.topic?.topic_input?.value?.trim();
+    const assetName = values.asset_name?.asset_name_input?.value?.trim();
+    const draftLink = values.draft_link?.draft_link_input?.value?.trim();
+    const additionalNotes = values.additional_notes?.additional_notes_input?.value?.trim();
+
+    // Validate required fields
+    if (!assetCode) {
+      await ack({
+        response_action: 'errors',
+        errors: {
+          asset_code: 'Asset Code is required'
+        }
+      });
+      return;
+    }
+
+    if (!draftLink) {
+      await ack({
+        response_action: 'errors',
+        errors: {
+          draft_link: 'Draft Link is required'
+        }
+      });
+      return;
+    }
+
+    // Acknowledge the submission
+    await ack();
+
+    // Get final topic and asset name (use fetched values if available, otherwise use form values)
+    let finalTopic = topic;
+    let finalAssetName = assetName;
+
+    // If topic or asset name are empty, try to fetch from Google Sheets
+    if (!finalTopic || !finalAssetName) {
+      try {
+        const asset = await googleSheets1.getAssetByCode(assetCode);
+        if (asset) {
+          finalTopic = finalTopic || asset.topic;
+          finalAssetName = finalAssetName || asset.assetName;
+        }
+      } catch (error) {
+        console.error('Error fetching asset details:', error);
+      }
+    }
+
+    // Get channel ID
+    const channelId = await ensureChannelId(client, reviewConfig, 'Review Workflow');
+
+    // Post message to channel
+    const message = {
+      channel: channelId,
+      text: `DRAFT COMPLETED | READY FOR REVIEW`,
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: 'DRAFT COMPLETED | READY FOR REVIEW',
+            emoji: true
+          }
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Code:*\n${assetCode}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Topic:*\n${finalTopic || 'N/A'}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Asset Name:*\n${finalAssetName || 'N/A'}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Status:*\nDraft → Ready for Review`
+            }
+          ]
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Draft Link:*\n${draftLink}`
+            }
+          ]
+        },
+        ...(additionalNotes ? [{
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Notes:*\n${additionalNotes}`
+          }
+        }] : []),
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '<@garry.woodford> - Please review this asset!'
+          }
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '*Next Action: Garry to review and approve/request changes*'
+          }
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Approve',
+                emoji: true
+              },
+              action_id: 'approve_btn',
+              style: 'primary',
+              value: assetCode
+            },
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Need Changes',
+                emoji: true
+              },
+              action_id: 'need_changes_btn',
+              style: 'danger',
+              value: assetCode
+            }
+          ]
+        }
+      ]
+    };
+
+    await client.chat.postMessage(message);
+
+    // Update Google Sheet
+    try {
+      await googleSheets1.updateAssetStatus(assetCode, draftLink);
+      console.log(`📊 Google Sheet updated for asset: ${assetCode}`);
+    } catch (error) {
+      console.error('Error updating Google Sheet:', error);
+    }
+
+    // Send ephemeral message to user
+    await client.chat.postEphemeral({
+      channel: channelId,
+      user: body.user.id,
+      text: '✅ Your submission has been posted to the channel and Google Sheet has been updated.'
+    });
+
+  } catch (error) {
+    console.error('Error handling review submission:', error);
+    await ack({
+      response_action: 'errors',
+      errors: {
+        asset_code: 'An error occurred. Please try again.'
+      }
+    });
+  }
+});
+
+// Resource App: Submit Resource Request modal
+resourceApp.view('request_for_resource_modal', async ({ ack, view, body, client }) => {
+  try {
+    const values = view.state.values;
+    const assetCode = values.asset_code?.asset_code_input?.value?.trim();
+    const topic = values.topic?.topic_input?.value?.trim();
+    const assetName = values.asset_name?.asset_name_input?.value?.trim();
+    const resourceType = values.resource_required?.resource_type_select?.selected_option?.value;
+    const additionalComments = values.additional_comments?.additional_comments_input?.value?.trim();
+
+    // Validate required fields
+    if (!assetCode) {
+      await ack({
+        response_action: 'errors',
+        errors: {
+          asset_code: 'Asset Code is required'
+        }
+      });
+      return;
+    }
+
+    if (!resourceType) {
+      await ack({
+        response_action: 'errors',
+        errors: {
+          resource_required: 'Resource type is required'
+        }
+      });
+      return;
+    }
+
+    // Acknowledge the submission
+    await ack();
+
+    // Get final topic and asset name (use fetched values if available, otherwise use form values)
+    let finalTopic = topic;
+    let finalAssetName = assetName;
+
+    // If topic or asset name are empty, try to fetch from Google Sheets
+    if (!finalTopic || !finalAssetName) {
+      try {
+        const asset = await googleSheets2.getAssetByCode(assetCode);
+        if (asset) {
+          finalTopic = finalTopic || asset.topic;
+          finalAssetName = finalAssetName || asset.assetName;
+        }
+      } catch (error) {
+        console.error('Error fetching asset details:', error);
+      }
+    }
+
+    // Get channel ID
+    const channelId = await ensureChannelId(client, resourceConfig, 'Resource Request');
+
+    // Post message to channel
+    const message = {
+      channel: channelId,
+      text: `REQUEST FOR RESOURCE`,
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: 'REQUEST FOR RESOURCE',
+            emoji: true
+          }
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Code:*\n${assetCode}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Topic:*\n${finalTopic || 'N/A'}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Asset Name:*\n${finalAssetName || 'N/A'}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Resource(s) Required:*\n${resourceType}`
+            }
+          ]
+        },
+        ...(additionalComments ? [{
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Notes:*\n${additionalComments}`
+          }
+        }] : []),
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '<@garry.woodford> - Please provide the requested resource.'
+          }
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Upload Resource',
+                emoji: true
+              },
+              action_id: 'upload_resource_btn',
+              style: 'primary',
+              value: JSON.stringify({
+                assetCode,
+                topic: finalTopic,
+                assetName: finalAssetName,
+                resourceType
+              })
+            }
+          ]
+        }
+      ]
+    };
+
+    await client.chat.postMessage(message);
+
+    // Send ephemeral message to user
+    await client.chat.postEphemeral({
+      channel: channelId,
+      user: body.user.id,
+      text: '✅ Your resource request has been posted to the channel.'
+    });
+
+  } catch (error) {
+    console.error('Error handling resource request submission:', error);
+    await ack({
+      response_action: 'errors',
+      errors: {
+        asset_code: 'An error occurred. Please try again.'
+      }
+    });
+  }
+});
+
 // Start both apps
 async function startApps() {
   try {
