@@ -1421,9 +1421,7 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
           element: {
             type: 'file_input',
             action_id: 'file_upload_input',
-            filetypes: resourceType === 'Video' ? ['mp4', 'mov', 'avi'] : 
-                      resourceType === 'Image' ? ['jpg', 'jpeg', 'png', 'gif'] : 
-                      ['pdf', 'doc', 'docx', 'txt'],
+            filetypes: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'doc', 'docx', 'txt'],
             max_files: 5
           }
         }
