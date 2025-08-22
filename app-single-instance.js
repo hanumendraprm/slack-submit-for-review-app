@@ -380,7 +380,7 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
           element: {
             type: 'plain_text_input',
             action_id: 'topic_input',
-            value: asset.topic || '',
+            value: asset['Topic'] || '',
             placeholder: {
               type: 'plain_text',
               text: 'Automatically Fetched: Topic of the Asset',
@@ -399,7 +399,7 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
           element: {
             type: 'plain_text_input',
             action_id: 'asset_name_input',
-            value: asset.assetName || '',
+            value: asset['Asset Name'] || '',
             placeholder: {
               type: 'plain_text',
               text: 'Automatically Fetched LinkedIn Post etc.',
@@ -848,7 +848,7 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
           element: {
             type: 'plain_text_input',
             action_id: 'topic_input',
-            value: asset.topic || '',
+            value: asset['Topic'] || '',
             placeholder: {
               type: 'plain_text',
               text: 'Automatically Fetched: Topic of the Asset',
@@ -867,7 +867,7 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
           element: {
             type: 'plain_text_input',
             action_id: 'asset_name_input',
-            value: asset.assetName || '',
+            value: asset['Asset Name'] || '',
             placeholder: {
               type: 'plain_text',
               text: 'Automatically Fetched LinkedIn Post etc.',
