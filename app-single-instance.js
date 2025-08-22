@@ -582,6 +582,13 @@ app.view('submit_for_review_modal', async ({ ack, body, client }) => {
           }
         }] : []),
         {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '@Garry, please review the resource and let us know the status of the draft using one of the actions below'
+          }
+        },
+        {
           type: 'actions',
           elements: [
             {
