@@ -1,1 +1,1 @@
-web: node app-multi-enhanced.js
+web: node app-single-instance.js
