@@ -613,12 +613,7 @@ app.view('submit_for_review_modal', async ({ ack, body, client }) => {
 
     await client.chat.postMessage(message);
 
-    // Send ephemeral message to user
-    await client.chat.postEphemeral({
-      channel: channelId,
-      user: body.user.id,
-      text: '✅ Your submission has been posted to the channel for review.'
-    });
+
 
   } catch (error) {
     console.error('Error handling review submission:', error);
@@ -1144,12 +1139,7 @@ app.view('request_for_resource_modal', async ({ ack, body, client }) => {
 
     await client.chat.postMessage(message);
 
-    // Send ephemeral message to user
-    await client.chat.postEphemeral({
-      channel: channelId,
-      user: body.user.id,
-      text: '✅ Your resource request has been posted to the channel.'
-    });
+
 
   } catch (error) {
     console.error('Error handling resource request submission:', error);
@@ -1741,12 +1731,7 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
 
     await client.chat.postMessage(replyMessage);
 
-    // Send ephemeral message to user
-    await client.chat.postEphemeral({
-      channel: body.user.id,
-      user: body.user.id,
-      text: `✅ File link added! A reply has been posted in the original thread with all details.`
-    });
+
 
     // File link has been processed and thread reply posted
     console.log('✅ File link processed successfully');
