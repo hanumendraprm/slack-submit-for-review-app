@@ -289,6 +289,7 @@ app.shortcut('submit_for_review', async ({ shortcut, ack, client }) => {
 
 // Fetch Details button for Review
 app.action('fetch_details_btn', async ({ ack, body, client }) => {
+  console.log('🎯 Fetch Details button clicked for Review workflow');
   try {
 
     
@@ -326,6 +327,7 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
     }
 
     // Update the modal with fetched data using response_action
+    console.log('🔄 Attempting to update Review modal with response_action');
     await ack({
       response_action: "update",
       view: {
@@ -767,6 +769,7 @@ app.shortcut('request_for_resource', async ({ shortcut, ack, client }) => {
 
 // Fetch Details button for Resource Request
 app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
+  console.log('🎯 Fetch Details button clicked for Resource Request workflow');
   try {
 
     
@@ -804,6 +807,7 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
     }
 
     // Update the modal with fetched data using response_action
+    console.log('🔄 Attempting to update Resource Request modal with response_action');
     await ack({
       response_action: "update",
       view: {
