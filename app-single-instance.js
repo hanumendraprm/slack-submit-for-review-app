@@ -530,7 +530,7 @@ app.view('submit_for_review_modal', async ({ ack, body, client }) => {
 
     // Update Google Sheets
     if (googleSheets1.auth) {
-      await googleSheets1.updateAssetStatus(assetCode, 'Review', draftLink);
+      await googleSheets1.updateAssetStatus(assetCode, draftLink);
     }
 
     // Post message to channel
