@@ -1414,7 +1414,7 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*File Upload Instructions for ${resourceType}*\n\n📁 *For files under 10MB:*\n• Use the file upload below\n\n📁 *For larger files (over 10MB):*\n• Upload directly to Google Drive\n• Use the shared folder: <https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|Click here>\n• Files will be organized in the appropriate subfolder (${resourceType})\n\n*Note:* Slack has a 10MB file size limit. Larger files must be uploaded to Google Drive directly.`
+            text: `*File Upload Instructions for ${resourceType}*\n\n📁 *For files under 10MB:*\n• Use the file upload below\n• Files will be automatically organized in Google Drive\n\n📁 *For larger files (over 10MB):*\n• Upload directly to Google Drive\n• Use this link: <https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Shared Resource Folder>\n• Place files in the \`${resourceType}\` subfolder\n• Files will be automatically organized by asset code\n\n*Note:* Slack has a 10MB file size limit. Large files must be uploaded to Google Drive directly.`
           }
         },
         {
@@ -1472,11 +1472,12 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
       text: `✅ Successfully uploaded ${files.length} file(s)! Files will be processed and organized in Google Drive.`
     });
 
-    // TODO: Implement Google Drive upload functionality
+    // TODO: Implement Google Drive upload functionality for small files
     // This would involve:
     // 1. Downloading files from Slack using files.info and files.get
     // 2. Uploading them to Google Drive in the appropriate subfolder
     // 3. Organizing by resource type (Video/Image/Document)
+    // 4. Creating asset-specific folders within the resource type folder
 
   } catch (error) {
     console.error('Error handling file upload:', error);
