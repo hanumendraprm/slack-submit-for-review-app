@@ -1411,11 +1411,18 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
           }
         },
         {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*File Upload Instructions for ${resourceType}*\n\n📁 *For files under 10MB:*\n• Use the file upload below\n\n📁 *For larger files (over 10MB):*\n• Upload directly to Google Drive\n• Use the shared folder: <https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|Click here>\n• Files will be organized in the appropriate subfolder (${resourceType})\n\n*Note:* Slack has a 10MB file size limit. Larger files must be uploaded to Google Drive directly.`
+          }
+        },
+        {
           type: 'input',
           block_id: 'file_upload',
           label: {
             type: 'plain_text',
-            text: 'Upload Files',
+            text: 'Upload Small Files (< 10MB)',
             emoji: true
           },
           element: {
