@@ -289,8 +289,6 @@ app.shortcut('submit_for_review', async ({ shortcut, ack, client }) => {
 
 // Fetch Details button for Review
 app.action('fetch_details_btn', async ({ ack, body, client }) => {
-  await ack();
-  
   try {
 
     
@@ -327,16 +325,141 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
       return;
     }
 
-    // Instead of updating the modal, show the fetched data in an ephemeral message
-    const fetchedDataMessage = `✅ *Asset Details Fetched Successfully!*\n\n*Asset Code:* ${assetCode}\n*Topic:* ${asset['Topic'] || 'N/A'}\n*Asset Name:* ${asset['Asset Name'] || 'N/A'}\n\nPlease copy these details into the form fields above.`;
-    
-    await client.chat.postEphemeral({
-      channel: body.user.id,
-      user: body.user.id,
-      text: fetchedDataMessage
+    // Update the modal with fetched data using response_action
+    await ack({
+      response_action: "update",
+      view: {
+        type: "modal",
+        callback_id: "submit_for_review_modal",
+        title: {
+          type: "plain_text",
+          text: "Submit for Review",
+          emoji: true
+        },
+        submit: {
+          type: "plain_text",
+          text: "Submit",
+          emoji: true
+        },
+        close: {
+          type: "plain_text",
+          text: "Cancel",
+          emoji: true
+        },
+        blocks: [
+          {
+            type: "input",
+            block_id: "asset_code",
+            label: {
+              type: "plain_text",
+              text: "Asset Code",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "asset_code_input",
+              initial_value: assetCode,
+              placeholder: {
+                type: "plain_text",
+                text: "e.g., GW1",
+                emoji: true
+              }
+            }
+          },
+          {
+            type: "actions",
+            block_id: "fetch_details",
+            elements: [
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "Fetch Details",
+                  emoji: true
+                },
+                action_id: "fetch_details_btn",
+                style: "primary"
+              }
+            ]
+          },
+          {
+            type: "input",
+            block_id: "topic",
+            label: {
+              type: "plain_text",
+              text: "Topic",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "topic_input",
+              initial_value: asset['Topic'] || '',
+              placeholder: {
+                type: "plain_text",
+                text: "Automatically Fetched: Topic of the Asset",
+                emoji: true
+              }
+            }
+          },
+          {
+            type: "input",
+            block_id: "asset_name",
+            label: {
+              type: "plain_text",
+              text: "Asset Name",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "asset_name_input",
+              initial_value: asset['Asset Name'] || '',
+              placeholder: {
+                type: "plain_text",
+                text: "Automatically Fetched LinkedIn Post etc.",
+                emoji: true
+              }
+            }
+          },
+          {
+            type: "input",
+            block_id: "draft_link",
+            label: {
+              type: "plain_text",
+              text: "Draft Link",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "draft_link_input",
+              placeholder: {
+                type: "plain_text",
+                text: "https://...",
+                emoji: true
+              }
+            }
+          },
+          {
+            type: "input",
+            block_id: "additional_notes",
+            label: {
+              type: "plain_text",
+              text: "Additional Notes",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "additional_notes_input",
+              multiline: true,
+              placeholder: {
+                type: "plain_text",
+                text: "Any additional notes or comments...",
+                emoji: true
+              }
+            }
+          }
+        ]
+      }
     });
-    
-    return;
 
 
   } catch (error) {
@@ -644,8 +767,6 @@ app.shortcut('request_for_resource', async ({ shortcut, ack, client }) => {
 
 // Fetch Details button for Resource Request
 app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
-  await ack();
-  
   try {
 
     
@@ -682,13 +803,166 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
       return;
     }
 
-    // Instead of updating the modal, show the fetched data in an ephemeral message
-    const fetchedDataMessage = `✅ *Asset Details Fetched Successfully!*\n\n*Asset Code:* ${assetCode}\n*Topic:* ${asset['Topic'] || 'N/A'}\n*Asset Name:* ${asset['Asset Name'] || 'N/A'}\n\nPlease copy these details into the form fields above.`;
-    
-    await client.chat.postEphemeral({
-      channel: body.user.id,
-      user: body.user.id,
-      text: fetchedDataMessage
+    // Update the modal with fetched data using response_action
+    await ack({
+      response_action: "update",
+      view: {
+        type: "modal",
+        callback_id: "request_for_resource_modal",
+        title: {
+          type: "plain_text",
+          text: "Request for Resource",
+          emoji: true
+        },
+        submit: {
+          type: "plain_text",
+          text: "Submit Request",
+          emoji: true
+        },
+        close: {
+          type: "plain_text",
+          text: "Cancel",
+          emoji: true
+        },
+        blocks: [
+          {
+            type: "input",
+            block_id: "asset_code",
+            label: {
+              type: "plain_text",
+              text: "Asset Code",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "asset_code_input",
+              initial_value: assetCode,
+              placeholder: {
+                type: "plain_text",
+                text: "e.g., GW1",
+                emoji: true
+              }
+            }
+          },
+          {
+            type: "actions",
+            block_id: "fetch_details",
+            elements: [
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "Fetch Details",
+                  emoji: true
+                },
+                action_id: "fetch_details_btn_resource",
+                style: "primary"
+              }
+            ]
+          },
+          {
+            type: "input",
+            block_id: "topic",
+            label: {
+              type: "plain_text",
+              text: "Topic",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "topic_input",
+              initial_value: asset['Topic'] || '',
+              placeholder: {
+                type: "plain_text",
+                text: "Automatically Fetched: Topic of the Asset",
+                emoji: true
+              }
+            }
+          },
+          {
+            type: "input",
+            block_id: "asset_name",
+            label: {
+              type: "plain_text",
+              text: "Asset Name",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "asset_name_input",
+              initial_value: asset['Asset Name'] || '',
+              placeholder: {
+                type: "plain_text",
+                text: "Automatically Fetched LinkedIn Post etc.",
+                emoji: true
+              }
+            }
+          },
+          {
+            type: "input",
+            block_id: "resource_type",
+            label: {
+              type: "plain_text",
+              text: "Resource Required",
+              emoji: true
+            },
+            element: {
+              type: "static_select",
+              action_id: "resource_type_input",
+              placeholder: {
+                type: "plain_text",
+                text: "Select resource type",
+                emoji: true
+              },
+              options: [
+                {
+                  text: {
+                    type: "plain_text",
+                    text: "Video",
+                    emoji: true
+                  },
+                  value: "Video"
+                },
+                {
+                  text: {
+                    type: "plain_text",
+                    text: "Image",
+                    emoji: true
+                  },
+                  value: "Image"
+                },
+                {
+                  text: {
+                    type: "plain_text",
+                    text: "Document",
+                    emoji: true
+                  },
+                  value: "Document"
+                }
+              ]
+            }
+          },
+          {
+            type: "input",
+            block_id: "additional_comments",
+            label: {
+              type: "plain_text",
+              text: "Additional Comments",
+              emoji: true
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "additional_comments_input",
+              multiline: true,
+              placeholder: {
+                type: "plain_text",
+                text: "Any additional comments or requirements...",
+                emoji: true
+              }
+            }
+          }
+        ]
+      }
     });
     
 
