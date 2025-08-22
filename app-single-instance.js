@@ -292,7 +292,20 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
   await ack();
   
   try {
-    const assetCode = body.state.values.asset_code.asset_code_input.value;
+    console.log('Fetch Details button clicked. Body structure:', JSON.stringify(body, null, 2));
+    
+    // Check if body.state and body.state.values exist
+    if (!body.state || !body.state.values) {
+      console.error('body.state or body.state.values is undefined');
+      await client.chat.postEphemeral({
+        channel: body.user.id,
+        user: body.user.id,
+        text: '❌ Error: Unable to read form data. Please try again.'
+      });
+      return;
+    }
+    
+    const assetCode = body.state.values.asset_code?.asset_code_input?.value;
     
     if (!assetCode) {
       await client.chat.postEphemeral({
@@ -760,7 +773,20 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
   await ack();
   
   try {
-    const assetCode = body.state.values.asset_code.asset_code_input.value;
+    console.log('Fetch Details Resource button clicked. Body structure:', JSON.stringify(body, null, 2));
+    
+    // Check if body.state and body.state.values exist
+    if (!body.state || !body.state.values) {
+      console.error('body.state or body.state.values is undefined');
+      await client.chat.postEphemeral({
+        channel: body.user.id,
+        user: body.user.id,
+        text: '❌ Error: Unable to read form data. Please try again.'
+      });
+      return;
+    }
+    
+    const assetCode = body.state.values.asset_code?.asset_code_input?.value;
     
     if (!assetCode) {
       await client.chat.postEphemeral({
