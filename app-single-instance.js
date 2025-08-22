@@ -292,7 +292,7 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
   await ack();
   
   try {
-    console.log('Fetch Details button clicked. Body structure:', JSON.stringify(body, null, 2));
+
     
     // Check if body.view and body.view.state exist
     if (!body.view || !body.view.state || !body.view.state.values) {
@@ -773,7 +773,7 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
   await ack();
   
   try {
-    console.log('Fetch Details Resource button clicked. Body structure:', JSON.stringify(body, null, 2));
+
     
     // Check if body.view and body.view.state exist
     if (!body.view || !body.view.state || !body.view.state.values) {
