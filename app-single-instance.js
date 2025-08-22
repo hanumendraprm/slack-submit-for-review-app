@@ -501,7 +501,7 @@ app.view('submit_for_review_modal', async ({ ack, body, client }) => {
   
   try {
     const values = body.view.state.values;
-    const assetCode = values.asset_code.asset_code_input.value;
+    let assetCode = values.asset_code.asset_code_input.value;
     const draftLink = values.draft_link.draft_link_input.value;
     const additionalNotes = values.additional_notes.additional_notes_input.value;
     
@@ -510,13 +510,15 @@ app.view('submit_for_review_modal', async ({ ack, body, client }) => {
     let assetName = values.asset_name.asset_name_input.value;
     
     // If form values are empty, try to get from private_metadata
-    if (!topic || !assetName) {
+    if (!assetCode || !topic || !assetName) {
       try {
         const fetchedData = JSON.parse(body.view.private_metadata || '{}');
+        assetCode = assetCode || fetchedData.assetCode || '';
         topic = topic || fetchedData.topic || 'N/A';
         assetName = assetName || fetchedData.assetName || 'N/A';
       } catch (error) {
         console.error('Error parsing private_metadata:', error);
+        assetCode = assetCode || '';
         topic = topic || 'N/A';
         assetName = assetName || 'N/A';
       }
@@ -1417,6 +1419,7 @@ app.action('submit_for_review_btn', async ({ ack, body, client }) => {
     const modalView = {
       type: 'modal',
       callback_id: 'submit_for_review_modal',
+      private_metadata: JSON.stringify({ assetCode }),
       title: {
         type: 'plain_text',
         text: 'Submit for Review',
@@ -1444,7 +1447,6 @@ app.action('submit_for_review_btn', async ({ ack, body, client }) => {
           element: {
             type: 'plain_text_input',
             action_id: 'asset_code_input',
-            value: assetCode,
             placeholder: {
               type: 'plain_text',
               text: 'e.g., GW1',
