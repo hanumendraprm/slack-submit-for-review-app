@@ -289,6 +289,7 @@ app.shortcut('submit_for_review', async ({ shortcut, ack, client }) => {
 
 // Fetch Details button for Review
 app.action('fetch_details_btn', async ({ ack, body, client }) => {
+  console.log('🎯 Fetch Details button clicked for Review workflow');
   await ack();
   
   try {
@@ -644,6 +645,7 @@ app.shortcut('request_for_resource', async ({ shortcut, ack, client }) => {
 
 // Fetch Details button for Resource Request
 app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
+  console.log('🎯 Fetch Details button clicked for Resource Request workflow');
   await ack();
   
   try {
