@@ -294,9 +294,9 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
   try {
     console.log('Fetch Details button clicked. Body structure:', JSON.stringify(body, null, 2));
     
-    // Check if body.state and body.state.values exist
-    if (!body.state || !body.state.values) {
-      console.error('body.state or body.state.values is undefined');
+    // Check if body.view and body.view.state exist
+    if (!body.view || !body.view.state || !body.view.state.values) {
+      console.error('body.view.state.values is undefined');
       await client.chat.postEphemeral({
         channel: body.user.id,
         user: body.user.id,
@@ -305,7 +305,7 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
       return;
     }
     
-    const assetCode = body.state.values.asset_code?.asset_code_input?.value;
+    const assetCode = body.view.state.values.asset_code?.asset_code_input?.value;
     
     if (!assetCode) {
       await client.chat.postEphemeral({
@@ -775,9 +775,9 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
   try {
     console.log('Fetch Details Resource button clicked. Body structure:', JSON.stringify(body, null, 2));
     
-    // Check if body.state and body.state.values exist
-    if (!body.state || !body.state.values) {
-      console.error('body.state or body.state.values is undefined');
+    // Check if body.view and body.view.state exist
+    if (!body.view || !body.view.state || !body.view.state.values) {
+      console.error('body.view.state.values is undefined');
       await client.chat.postEphemeral({
         channel: body.user.id,
         user: body.user.id,
@@ -786,7 +786,7 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
       return;
     }
     
-    const assetCode = body.state.values.asset_code?.asset_code_input?.value;
+    const assetCode = body.view.state.values.asset_code?.asset_code_input?.value;
     
     if (!assetCode) {
       await client.chat.postEphemeral({
