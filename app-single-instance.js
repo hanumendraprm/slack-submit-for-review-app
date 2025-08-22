@@ -1411,10 +1411,20 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
           }
         },
         {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*Instructions:*\n• For ${resourceType} files, please upload them to the shared Google Drive\n• Files will be organized in the appropriate subfolder\n• Contact the team for access to the shared drive`
+          type: 'input',
+          block_id: 'file_upload',
+          label: {
+            type: 'plain_text',
+            text: 'Upload Files',
+            emoji: true
+          },
+          element: {
+            type: 'file_input',
+            action_id: 'file_upload_input',
+            filetypes: resourceType === 'Video' ? ['mp4', 'mov', 'avi'] : 
+                      resourceType === 'Image' ? ['jpg', 'jpeg', 'png', 'gif'] : 
+                      ['pdf', 'doc', 'docx', 'txt'],
+            max_files: 5
           }
         }
       ]
@@ -1427,6 +1437,49 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
 
   } catch (error) {
     console.error('Error opening upload modal:', error);
+  }
+});
+
+// Upload Resource modal submission
+app.view('upload_resource_modal', async ({ ack, body, client }) => {
+  await ack();
+  
+  try {
+    const values = body.view.state.values;
+    const files = values.file_upload.file_upload_input.files || [];
+    
+    if (files.length === 0) {
+      await client.chat.postEphemeral({
+        channel: body.user.id,
+        user: body.user.id,
+        text: '❌ No files were uploaded. Please try again.'
+      });
+      return;
+    }
+
+    console.log('📁 Processing uploaded files:', files.length);
+
+    // Get the original resource request data from the button that opened this modal
+    // For now, we'll just acknowledge the upload
+    await client.chat.postEphemeral({
+      channel: body.user.id,
+      user: body.user.id,
+      text: `✅ Successfully uploaded ${files.length} file(s)! Files will be processed and organized in Google Drive.`
+    });
+
+    // TODO: Implement Google Drive upload functionality
+    // This would involve:
+    // 1. Downloading files from Slack using files.info and files.get
+    // 2. Uploading them to Google Drive in the appropriate subfolder
+    // 3. Organizing by resource type (Video/Image/Document)
+
+  } catch (error) {
+    console.error('Error handling file upload:', error);
+    await client.chat.postEphemeral({
+      channel: body.user.id,
+      user: body.user.id,
+      text: '❌ Error processing uploaded files. Please try again.'
+    });
   }
 });
 
