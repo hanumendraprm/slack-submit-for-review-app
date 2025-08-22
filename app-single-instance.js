@@ -1070,7 +1070,7 @@ app.view('request_for_resource_modal', async ({ ack, body, client }) => {
     // Post message to channel
     const message = {
       channel: channelId,
-      text: `📋 *REQUEST FOR RESOURCE*\n\n*Code:* ${assetCode}\n*Topic:* ${topic || 'N/A'}\n*Asset Name:* ${assetName || 'N/A'}\n*Resource(s) Required:* ${resourceType}\n${additionalComments ? `*Notes:* ${additionalComments}` : ''}\n\n<@garry.woodford> - Please provide the requested resource.`,
+      text: `📋 *REQUEST FOR RESOURCE*\n\n*Code:* ${assetCode}\n*Topic:* ${topic || 'N/A'}\n*Asset Name:* ${assetName || 'N/A'}\n*Resource(s) Required:* ${resourceType}\n${additionalComments ? `*Notes:* ${additionalComments}` : ''}\n\n<@U09C1CV4UM7> - Please provide the requested resource.`,
       blocks: [
         {
           type: 'header',
@@ -1117,7 +1117,7 @@ app.view('request_for_resource_modal', async ({ ack, body, client }) => {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: '<@garry.woodford> - Please provide the requested resource.'
+            text: '<@U09C1CV4UM7> - Please provide the requested resource.'
           }
         },
         {
