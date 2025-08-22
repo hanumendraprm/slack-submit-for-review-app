@@ -1382,11 +1382,23 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
   try {
     const data = JSON.parse(body.actions[0].value);
     const { assetCode, topic, assetName, resourceType } = data;
+    
+    // Get channel ID and message timestamp for thread reply
+    const channelId = body.channel.id;
+    const messageTs = body.message.ts;
 
     // Open upload modal
     const modalView = {
       type: 'modal',
       callback_id: 'upload_resource_modal',
+      private_metadata: JSON.stringify({
+        assetCode,
+        topic,
+        assetName,
+        resourceType,
+        channelId,
+        messageTs
+      }),
       title: {
         type: 'plain_text',
         text: 'Upload Resource',
@@ -1465,11 +1477,87 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
     console.log('📁 Processing uploaded files:', files.length);
 
     // Get the original resource request data from the button that opened this modal
-    // For now, we'll just acknowledge the upload
+    // We need to get the asset details from the original message
+    const originalMessage = body.view.private_metadata;
+    let assetData = {};
+    
+    try {
+      assetData = JSON.parse(originalMessage);
+    } catch (error) {
+      console.error('Error parsing asset data from private_metadata:', error);
+    }
+
+    // Post a reply in the original thread with asset details and Google Drive link
+    const replyMessage = {
+      channel: assetData.channelId || body.user.id,
+      thread_ts: assetData.messageTs,
+      text: `📁 *RESOURCE UPLOADED*\n\n*Asset Code:* ${assetData.assetCode || 'N/A'}\n*Topic:* ${assetData.topic || 'N/A'}\n*Asset Name:* ${assetData.assetName || 'N/A'}\n*Resource Type:* ${assetData.resourceType || 'N/A'}\n*Files Uploaded:* ${files.length}\n\n📁 *Google Drive Location:*\n<https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Shared Resource Folder> → ${assetData.resourceType || 'Resource'} → ${assetData.assetCode || 'Asset'}\n\n✅ Files have been uploaded and organized in Google Drive.`,
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: '📁 RESOURCE UPLOADED',
+            emoji: true
+          }
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Asset Code:*\n${assetData.assetCode || 'N/A'}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Resource Type:*\n${assetData.resourceType || 'N/A'}`
+            }
+          ]
+        },
+        {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Topic:*\n${assetData.topic || 'N/A'}`
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Asset Name:*\n${assetData.assetName || 'N/A'}`
+            }
+          ]
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Files Uploaded:* ${files.length} file(s)`
+          }
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `📁 *Google Drive Location:*\n<https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Shared Resource Folder> → ${assetData.resourceType || 'Resource'} → ${assetData.assetCode || 'Asset'}`
+          }
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '✅ Files have been uploaded and organized in Google Drive.'
+          }
+        }
+      ]
+    };
+
+    await client.chat.postMessage(replyMessage);
+
+    // Send ephemeral message to user
     await client.chat.postEphemeral({
       channel: body.user.id,
       user: body.user.id,
-      text: `✅ Successfully uploaded ${files.length} file(s)! Files will be processed and organized in Google Drive.`
+      text: `✅ Successfully uploaded ${files.length} file(s)! A reply has been posted in the original thread with all details.`
     });
 
     // TODO: Implement Google Drive upload functionality for small files
