@@ -1168,22 +1168,68 @@ app.action('approve_btn', async ({ ack, body, client }) => {
   
   try {
     const assetCode = body.actions[0].value;
-    const channelId = body.channel.id;
+    
+    // Open approval modal
+    const modalView = {
+      type: 'modal',
+      callback_id: 'approve_modal',
+      private_metadata: JSON.stringify({
+        assetCode,
+        channelId: body.channel.id,
+        messageTs: body.message.ts
+      }),
+      title: {
+        type: 'plain_text',
+        text: 'Approve Asset',
+        emoji: true
+      },
+      submit: {
+        type: 'plain_text',
+        text: 'Approve',
+        emoji: true
+      },
+      close: {
+        type: 'plain_text',
+        text: 'Cancel',
+        emoji: true
+      },
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Asset Code:* ${assetCode}\n\nPlease add any additional comments for this approval:`
+          }
+        },
+        {
+          type: 'input',
+          block_id: 'approval_comments',
+          label: {
+            type: 'plain_text',
+            text: 'Additional Comments',
+            emoji: true
+          },
+          element: {
+            type: 'plain_text_input',
+            action_id: 'approval_comments_input',
+            multiline: true,
+            placeholder: {
+              type: 'plain_text',
+              text: 'Any additional comments or feedback...',
+              emoji: true
+            }
+          }
+        }
+      ]
+    };
 
-    // Update Google Sheets
-    if (googleSheets1.auth) {
-      await googleSheets1.approveAsset(assetCode);
-    }
-
-    // Post approval message
-    await client.chat.postMessage({
-      channel: channelId,
-      thread_ts: body.message.ts,
-      text: `✅ *APPROVED*\n\nAsset Code: ${assetCode}\nStatus: Finalized\n\nThis content has been approved and is ready for final use.`
+    await client.views.open({
+      trigger_id: body.trigger_id,
+      view: modalView
     });
 
   } catch (error) {
-    console.error('Error handling approval:', error);
+    console.error('Error opening approval modal:', error);
   }
 });
 
@@ -1193,24 +1239,146 @@ app.action('need_changes_btn', async ({ ack, body, client }) => {
   
   try {
     const assetCode = body.actions[0].value;
-    const channelId = body.channel.id;
+    
+    // Get asset details from Google Sheets
+    let assetDetails = {};
+    if (googleSheets1.auth) {
+      try {
+        assetDetails = await googleSheets1.getAssetByCode(assetCode);
+      } catch (error) {
+        console.error('Error fetching asset details:', error);
+      }
+    }
+    
+    // Open need changes modal
+    const modalView = {
+      type: 'modal',
+      callback_id: 'need_changes_modal',
+      private_metadata: JSON.stringify({
+        assetCode,
+        channelId: body.channel.id,
+        messageTs: body.message.ts,
+        topic: assetDetails['Topic'] || 'N/A',
+        assetName: assetDetails['Asset Name'] || 'N/A'
+      }),
+      title: {
+        type: 'plain_text',
+        text: 'Request Changes',
+        emoji: true
+      },
+      submit: {
+        type: 'plain_text',
+        text: 'Submit Feedback',
+        emoji: true
+      },
+      close: {
+        type: 'plain_text',
+        text: 'Cancel',
+        emoji: true
+      },
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Asset Details:*\n• *Code:* ${assetCode}\n• *Topic:* ${assetDetails['Topic'] || 'N/A'}\n• *Asset Name:* ${assetDetails['Asset Name'] || 'N/A'}`
+          }
+        },
+        {
+          type: 'input',
+          block_id: 'feedback_comments',
+          label: {
+            type: 'plain_text',
+            text: 'Feedback & Changes Required',
+            emoji: true
+          },
+          element: {
+            type: 'plain_text_input',
+            action_id: 'feedback_comments_input',
+            multiline: true,
+            placeholder: {
+              type: 'plain_text',
+              text: 'Please describe the changes needed...',
+              emoji: true
+            }
+          }
+        }
+      ]
+    };
+
+    await client.views.open({
+      trigger_id: body.trigger_id,
+      view: modalView
+    });
+
+  } catch (error) {
+    console.error('Error opening need changes modal:', error);
+  }
+});
+
+// Approve modal submission
+app.view('approve_modal', async ({ ack, body, client }) => {
+  await ack();
+  
+  try {
+    const values = body.view.state.values;
+    const additionalComments = values.approval_comments?.approval_comments_input?.value || '';
+    
+    // Get data from private_metadata
+    const data = JSON.parse(body.view.private_metadata);
+    const { assetCode, channelId, messageTs } = data;
+
+    // Update Google Sheets
+    if (googleSheets1.auth) {
+      await googleSheets1.approveAsset(assetCode);
+    }
+
+    // Post approval message with comments
+    const approvalText = additionalComments 
+      ? `✅ *APPROVED*\n\nAsset Code: ${assetCode}\nStatus: Finalized\n\n*Comments:* ${additionalComments}\n\nThis content has been approved and is ready for final use.`
+      : `✅ *APPROVED*\n\nAsset Code: ${assetCode}\nStatus: Finalized\n\nThis content has been approved and is ready for final use.`;
+
+    await client.chat.postMessage({
+      channel: channelId,
+      thread_ts: messageTs,
+      text: approvalText
+    });
+
+  } catch (error) {
+    console.error('Error handling approval submission:', error);
+  }
+});
+
+// Need Changes modal submission
+app.view('need_changes_modal', async ({ ack, body, client }) => {
+  await ack();
+  
+  try {
+    const values = body.view.state.values;
+    const feedbackComments = values.feedback_comments?.feedback_comments_input?.value || '';
+    
+    // Get data from private_metadata
+    const data = JSON.parse(body.view.private_metadata);
+    const { assetCode, channelId, messageTs, topic, assetName } = data;
 
     // Update Google Sheets
     if (googleSheets1.auth) {
       await googleSheets1.rejectAsset(assetCode);
     }
 
-    // Post feedback message
+    // Post feedback message with comments
+    const feedbackText = `🔄 *NEEDS CHANGES*\n\n*Asset Code:* ${assetCode}\n*Topic:* ${topic}\n*Asset Name:* ${assetName}\n*Status:* Draft\n\n*Feedback:* ${feedbackComments}\n\nPlease make the requested changes and submit for review again.`;
+
     await client.chat.postMessage({
       channel: channelId,
-      thread_ts: body.message.ts,
-      text: `🔄 *NEEDS CHANGES*\n\nAsset Code: ${assetCode}\nStatus: Draft\n\nPlease make the requested changes and submit for review again.`,
+      thread_ts: messageTs,
+      text: feedbackText,
       blocks: [
         {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `🔄 *NEEDS CHANGES*\n\nAsset Code: ${assetCode}\nStatus: Draft\n\nPlease make the requested changes and submit for review again.`
+            text: feedbackText
           }
         },
         {
@@ -1233,7 +1401,7 @@ app.action('need_changes_btn', async ({ ack, body, client }) => {
     });
 
   } catch (error) {
-    console.error('Error handling need changes:', error);
+    console.error('Error handling need changes submission:', error);
   }
 });
 

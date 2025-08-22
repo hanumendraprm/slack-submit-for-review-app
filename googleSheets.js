@@ -121,32 +121,39 @@ class GoogleSheetsService {
         throw new Error(`Asset with code "${assetCode}" not found`);
       }
 
-      // Update Status (column G, index 6) and Draft Link (column J, index 9)
+      // Update Status (column G, index 6) and Last Updated (column M, index 12)
       const statusRange = `G${rowIndex}`;
-      const draftLinkRange = `J${rowIndex}`;
       const lastUpdatedRange = `M${rowIndex}`;
 
       const now = new Date().toISOString();
+
+      // Only update Draft Link if it's provided and not empty
+      const updateData = [
+        {
+          range: statusRange,
+          values: [['Review']]
+        },
+        {
+          range: lastUpdatedRange,
+          values: [[now]]
+        }
+      ];
+
+      // Only add Draft Link update if a valid link is provided
+      if (draftLink && draftLink.trim() !== '') {
+        const draftLinkRange = `J${rowIndex}`;
+        updateData.push({
+          range: draftLinkRange,
+          values: [[draftLink]]
+        });
+      }
 
       await this.sheets.spreadsheets.values.batchUpdate({
         auth,
         spreadsheetId: this.spreadsheetId,
         requestBody: {
           valueInputOption: 'RAW',
-          data: [
-            {
-              range: statusRange,
-              values: [['Review']]
-            },
-            {
-              range: draftLinkRange,
-              values: [[draftLink]]
-            },
-            {
-              range: lastUpdatedRange,
-              values: [[now]]
-            }
-          ]
+          data: updateData
         }
       });
 
