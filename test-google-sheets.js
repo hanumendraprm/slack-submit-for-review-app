@@ -21,14 +21,14 @@ async function testGoogleSheets() {
     
     if (assets.length > 0) {
       const firstAsset = assets[0];
-      console.log(`   Sample asset: ${firstAsset.assetCode} - ${firstAsset.topic}`);
+      console.log(`   Sample asset: ${firstAsset['A Code']} - ${firstAsset['Topic']}`);
       
       // Test fetching by code
-      const testAsset = await googleSheets1.getAssetByCode(firstAsset.assetCode);
+      const testAsset = await googleSheets1.getAssetByCode(firstAsset['A Code']);
       if (testAsset) {
-        console.log(`   ✅ Successfully fetched asset by code: ${testAsset.assetCode}`);
+        console.log(`   ✅ Successfully fetched asset by code: ${testAsset['A Code']}`);
       } else {
-        console.log(`   ❌ Failed to fetch asset by code: ${firstAsset.assetCode}`);
+        console.log(`   ❌ Failed to fetch asset by code: ${firstAsset['A Code']}`);
       }
     }
     
@@ -52,14 +52,14 @@ async function testGoogleSheets() {
     
     if (assets.length > 0) {
       const firstAsset = assets[0];
-      console.log(`   Sample asset: ${firstAsset.assetCode} - ${firstAsset.topic}`);
+      console.log(`   Sample asset: ${firstAsset['A Code']} - ${firstAsset['Topic']}`);
       
       // Test fetching by code
-      const testAsset = await googleSheets2.getAssetByCode(firstAsset.assetCode);
+      const testAsset = await googleSheets2.getAssetByCode(firstAsset['A Code']);
       if (testAsset) {
-        console.log(`   ✅ Successfully fetched asset by code: ${testAsset.assetCode}`);
+        console.log(`   ✅ Successfully fetched asset by code: ${testAsset['A Code']}`);
       } else {
-        console.log(`   ❌ Failed to fetch asset by code: ${firstAsset.assetCode}`);
+        console.log(`   ❌ Failed to fetch asset by code: ${firstAsset['A Code']}`);
       }
     }
     

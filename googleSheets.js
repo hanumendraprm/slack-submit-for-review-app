@@ -75,9 +75,13 @@ class GoogleSheetsService {
   async getAssetByCode(assetCode) {
     try {
       const assets = await this.getAllAssets();
-      const asset = assets.find(a => 
-        a['A Code'] && a['A Code'].toString().trim().toLowerCase() === assetCode.trim().toLowerCase()
-      );
+      const asset = assets.find(a => {
+        const code = a['A Code'];
+        return code && 
+               code.toString && 
+               code.toString().trim && 
+               code.toString().trim().toLowerCase() === assetCode.trim().toLowerCase();
+      });
       return asset;
     } catch (error) {
       console.error('Error fetching asset by code:', error);
