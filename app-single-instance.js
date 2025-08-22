@@ -326,10 +326,12 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
       return;
     }
 
-    // Update the modal with fetched data using response_action
-    console.log('🔄 Attempting to update Review modal with response_action');
-    await ack({
-      response_action: "update",
+    // Update the modal with fetched data using views.update
+    console.log('🔄 Attempting to update Review modal with views.update');
+    await ack();
+    
+    await client.views.update({
+      view_id: body.view.id,
       view: {
         type: "modal",
         callback_id: "submit_for_review_modal",
@@ -806,10 +808,12 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
       return;
     }
 
-    // Update the modal with fetched data using response_action
-    console.log('🔄 Attempting to update Resource Request modal with response_action');
-    await ack({
-      response_action: "update",
+    // Update the modal with fetched data using views.update
+    console.log('🔄 Attempting to update Resource Request modal with views.update');
+    await ack();
+    
+    await client.views.update({
+      view_id: body.view.id,
       view: {
         type: "modal",
         callback_id: "request_for_resource_modal",
