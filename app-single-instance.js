@@ -1447,6 +1447,7 @@ app.action('submit_for_review_btn', async ({ ack, body, client }) => {
           element: {
             type: 'plain_text_input',
             action_id: 'asset_code_input',
+            initial_value: assetCode,
             placeholder: {
               type: 'plain_text',
               text: 'e.g., GW1',
