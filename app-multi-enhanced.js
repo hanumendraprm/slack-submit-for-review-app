@@ -731,6 +731,7 @@ resourceApp.action('fetch_details_btn_resource', async ({ ack, body, client }) =
 });
 
 // Start both apps
+async function startApps() {
   try {
     // Validate environment for both apps
     validateAppEnvironment(reviewConfig, 'Review Workflow');
