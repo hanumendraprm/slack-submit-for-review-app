@@ -30,7 +30,7 @@ const resourceApp = new App({
   token: process.env.SLACK_BOT_TOKEN_APP2,
   signingSecret: process.env.SLACK_SIGNING_SECRET_APP2,
   socketMode: true,
-  appToken: process.env.SLACK_APP_TOKEN_APP2
+  appToken: process.env.SLACK_APP_TOKEN_RFR || process.env.SLACK_APP_TOKEN_APP2
 });
 
 // App-specific configurations
