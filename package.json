@@ -5,12 +5,15 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "start:multi": "node app-multi.js",
     "dev": "nodemon app.js",
+    "dev:multi": "nodemon app-multi.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "echo \"No linting configured\"",
     "deploy:heroku": "git push heroku main",
     "deploy:railway": "railway up",
     "setup": "node setup.js",
+    "setup:multi": "node setup-multi-app.js",
     "setup:manual": "echo \"Please manually configure your .env file\""
   },
   "keywords": [
