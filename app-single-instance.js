@@ -517,7 +517,7 @@ app.view('submit_for_review_modal', async ({ ack, body, client }) => {
     const channelId = await ensureChannelId(client, reviewConfig, 'Review Workflow');
 
     // Update Google Sheets
-    if (googleSheets1.isInitialized()) {
+    if (googleSheets1.auth) {
       await googleSheets1.updateAssetStatus(assetCode, 'Review', draftLink);
     }
 
@@ -1159,7 +1159,7 @@ app.action('approve_btn', async ({ ack, body, client }) => {
     const channelId = body.channel.id;
 
     // Update Google Sheets
-    if (googleSheets1.isInitialized()) {
+    if (googleSheets1.auth) {
       await googleSheets1.approveAsset(assetCode);
     }
 
@@ -1184,7 +1184,7 @@ app.action('need_changes_btn', async ({ ack, body, client }) => {
     const channelId = body.channel.id;
 
     // Update Google Sheets
-    if (googleSheets1.isInitialized()) {
+    if (googleSheets1.auth) {
       await googleSheets1.rejectAsset(assetCode);
     }
 
@@ -1376,6 +1376,7 @@ app.action('submit_for_review_btn', async ({ ack, body, client }) => {
 
 // Upload Resource button handler
 app.action('upload_resource_btn', async ({ ack, body, client }) => {
+  console.log('🎯 Upload Resource button clicked');
   await ack();
   
   try {
@@ -1410,19 +1411,10 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
           }
         },
         {
-          type: 'input',
-          block_id: 'file_upload',
-          label: {
-            type: 'plain_text',
-            text: 'Upload Files',
-            emoji: true
-          },
-          element: {
-            type: 'file_input',
-            action_id: 'file_upload_input',
-            filetypes: resourceType === 'Video' ? ['mp4', 'mov', 'avi'] : 
-                      resourceType === 'Image' ? ['jpg', 'jpeg', 'png', 'gif'] : 
-                      ['pdf', 'doc', 'docx', 'txt']
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Instructions:*\n• For ${resourceType} files, please upload them to the shared Google Drive\n• Files will be organized in the appropriate subfolder\n• Contact the team for access to the shared drive`
           }
         }
       ]
