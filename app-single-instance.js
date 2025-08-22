@@ -330,11 +330,18 @@ app.action('fetch_details_btn', async ({ ack, body, client }) => {
     console.log('🔄 Attempting to update Review modal with views.update');
     await ack();
     
+    // Store fetched data in private_metadata for form submission
+    const fetchedData = JSON.stringify({
+      topic: asset['Topic'] || '',
+      assetName: asset['Asset Name'] || ''
+    });
+    
     await client.views.update({
       view_id: body.view.id,
       view: {
         type: "modal",
         callback_id: "submit_for_review_modal",
+        private_metadata: fetchedData,
         title: {
           type: "plain_text",
           text: "Submit for Review",
@@ -483,10 +490,25 @@ app.view('submit_for_review_modal', async ({ ack, body, client }) => {
   try {
     const values = body.view.state.values;
     const assetCode = values.asset_code.asset_code_input.value;
-    const topic = values.topic.topic_input.value;
-    const assetName = values.asset_name.asset_name_input.value;
     const draftLink = values.draft_link.draft_link_input.value;
     const additionalNotes = values.additional_notes.additional_notes_input.value;
+    
+    // Get topic and asset name from form values or private_metadata
+    let topic = values.topic.topic_input.value;
+    let assetName = values.asset_name.asset_name_input.value;
+    
+    // If form values are empty, try to get from private_metadata
+    if (!topic || !assetName) {
+      try {
+        const fetchedData = JSON.parse(body.view.private_metadata || '{}');
+        topic = topic || fetchedData.topic || 'N/A';
+        assetName = assetName || fetchedData.assetName || 'N/A';
+      } catch (error) {
+        console.error('Error parsing private_metadata:', error);
+        topic = topic || 'N/A';
+        assetName = assetName || 'N/A';
+      }
+    }
 
     if (!assetCode) {
       throw new Error('Asset Code is required');
@@ -812,11 +834,18 @@ app.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
     console.log('🔄 Attempting to update Resource Request modal with views.update');
     await ack();
     
+    // Store fetched data in private_metadata for form submission
+    const fetchedData = JSON.stringify({
+      topic: asset['Topic'] || '',
+      assetName: asset['Asset Name'] || ''
+    });
+    
     await client.views.update({
       view_id: body.view.id,
       view: {
         type: "modal",
         callback_id: "request_for_resource_modal",
+        private_metadata: fetchedData,
         title: {
           type: "plain_text",
           text: "Request for Resource",
@@ -992,10 +1021,25 @@ app.view('request_for_resource_modal', async ({ ack, body, client }) => {
   try {
     const values = body.view.state.values;
     const assetCode = values.asset_code.asset_code_input.value;
-    const topic = values.topic.topic_input.value;
-    const assetName = values.asset_name.asset_name_input.value;
     const resourceType = values.resource_type.resource_type_input.selected_option?.value;
     const additionalComments = values.additional_comments.additional_comments_input.value;
+    
+    // Get topic and asset name from form values or private_metadata
+    let topic = values.topic.topic_input.value;
+    let assetName = values.asset_name.asset_name_input.value;
+    
+    // If form values are empty, try to get from private_metadata
+    if (!topic || !assetName) {
+      try {
+        const fetchedData = JSON.parse(body.view.private_metadata || '{}');
+        topic = topic || fetchedData.topic || 'N/A';
+        assetName = assetName || fetchedData.assetName || 'N/A';
+      } catch (error) {
+        console.error('Error parsing private_metadata:', error);
+        topic = topic || 'N/A';
+        assetName = assetName || 'N/A';
+      }
+    }
 
     if (!assetCode) {
       throw new Error('Asset Code is required');
