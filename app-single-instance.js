@@ -1629,21 +1629,6 @@ app.action('upload_resource_btn', async ({ ack, body, client }) => {
               emoji: true
             }
           }
-        },
-        {
-          type: 'input',
-          block_id: 'file_upload',
-          label: {
-            type: 'plain_text',
-            text: 'Or Upload Small Files (< 10MB)',
-            emoji: true
-          },
-          element: {
-            type: 'file_input',
-            action_id: 'file_upload_input',
-            filetypes: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'doc', 'docx', 'txt'],
-            max_files: 5
-          }
         }
       ]
     };
@@ -1664,22 +1649,20 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
   
   try {
     const values = body.view.state.values;
-    const files = values.file_upload.file_upload_input.files || [];
     const fileLink = values.file_link?.file_link_input?.value || '';
     
-    if (files.length === 0 && !fileLink) {
+    if (!fileLink.trim()) {
       await client.chat.postEphemeral({
         channel: body.user.id,
         user: body.user.id,
-        text: '❌ Please either upload files or provide a Google Drive file link.'
+        text: '❌ Please provide a Google Drive file link.'
       });
       return;
     }
 
-    console.log('📁 Processing uploaded files:', files.length);
+    console.log('📁 Processing file link:', fileLink);
 
     // Get the original resource request data from the button that opened this modal
-    // We need to get the asset details from the original message
     const originalMessage = body.view.private_metadata;
     let assetData = {};
     
@@ -1690,19 +1673,13 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
     }
 
     // Prepare file information
-    let fileInfo = '';
-    if (files.length > 0) {
-      fileInfo += `*Files Uploaded:* ${files.length} file(s)\n`;
-    }
-    if (fileLink) {
-      fileInfo += `*File Link:* <${fileLink}|📁 View File>\n`;
-    }
+    const fileInfo = `*File Link:* <${fileLink}|📁 View File>\n`;
 
-    // Post a reply in the original thread with asset details and Google Drive link
+    // Post a reply in the original thread with asset details and file link
     const replyMessage = {
       channel: assetData.channelId || body.user.id,
       thread_ts: assetData.messageTs,
-      text: `📁 *RESOURCE UPLOADED*\n\n*Asset Code:* ${assetData.assetCode || 'N/A'}\n*Topic:* ${assetData.topic || 'N/A'}\n*Asset Name:* ${assetData.assetName || 'N/A'}\n*Resource Type:* ${assetData.resourceType || 'N/A'}\n\n${fileInfo}\n📁 *Google Drive Location:*\n<https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Shared Resource Folder> → ${assetData.resourceType || 'Resource'} → ${assetData.assetCode || 'Asset'}\n\n✅ Files have been uploaded and organized in Google Drive.`,
+      text: `📁 *RESOURCE UPLOADED*\n\n*Asset Code:* ${assetData.assetCode || 'N/A'}\n*Topic:* ${assetData.topic || 'N/A'}\n*Asset Name:* ${assetData.assetName || 'N/A'}\n*Resource Type:* ${assetData.resourceType || 'N/A'}\n\n${fileInfo}\n📁 *Google Drive Location:*\n<https://drive.google.com/drive/folders/0AJSOdkOyQvNpUk9PVA|📁 Shared Resource Folder> → ${assetData.resourceType || 'Resource'} → ${assetData.assetCode || 'Asset'}\n\n✅ File has been uploaded to Google Drive.`,
       blocks: [
         {
           type: 'header',
@@ -1738,20 +1715,13 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
             }
           ]
         },
-        ...(files.length > 0 ? [{
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*Files Uploaded:* ${files.length} file(s)`
-          }
-        }] : []),
-        ...(fileLink ? [{
+        {
           type: 'section',
           text: {
             type: 'mrkdwn',
             text: `*File Link:* <${fileLink}|📁 View File>`
           }
-        }] : []),
+        },
         {
           type: 'section',
           text: {
@@ -1772,123 +1742,14 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
     await client.chat.postMessage(replyMessage);
 
     // Send ephemeral message to user
-    let uploadMessage = '';
-    if (files.length > 0) {
-      uploadMessage += `✅ Successfully uploaded ${files.length} file(s)! `;
-    }
-    if (fileLink) {
-      uploadMessage += `✅ File link added! `;
-    }
-    uploadMessage += 'A reply has been posted in the original thread with all details.';
-
     await client.chat.postEphemeral({
       channel: body.user.id,
       user: body.user.id,
-      text: uploadMessage
+      text: `✅ File link added! A reply has been posted in the original thread with all details.`
     });
 
-    // Upload files to Google Drive
-    if (googleDrive.isInitialized()) {
-      try {
-        console.log('📁 Starting Google Drive upload process...');
-        
-        const uploadResults = [];
-        
-        for (const file of files) {
-          try {
-            console.log(`📁 Processing file: ${file.name} (${file.id})`);
-            
-            // Get file info from Slack
-            const fileInfo = await client.files.info({
-              file: file.id
-            });
-            
-            if (!fileInfo.ok) {
-              console.error(`❌ Failed to get file info for ${file.id}:`, fileInfo.error);
-              continue;
-            }
-            
-            // Download file from Slack
-            const fileResponse = await client.files.get({
-              file: file.id
-            });
-            
-            if (!fileResponse.ok) {
-              console.error(`❌ Failed to download file ${file.id}:`, fileResponse.error);
-              continue;
-            }
-            
-            // Upload to Google Drive
-            const uploadResult = await googleDrive.uploadFile(
-              Buffer.from(fileResponse.body),
-              file.name,
-              assetData.assetCode,
-              assetData.resourceType,
-              fileInfo.file.mimetype
-            );
-            
-            uploadResults.push(uploadResult);
-            console.log(`✅ File uploaded to Google Drive: ${uploadResult.fileName}`);
-            
-          } catch (fileError) {
-            console.error(`❌ Error processing file ${file.name}:`, fileError);
-          }
-        }
-        
-        if (uploadResults.length > 0) {
-          console.log(`✅ Successfully uploaded ${uploadResults.length} files to Google Drive`);
-          
-          // Update the thread reply with Google Drive links
-          const driveLinks = uploadResults.map(result => 
-            `• <${result.webViewLink}|${result.fileName}>`
-          ).join('\n');
-          
-          const updatedReply = {
-            channel: assetData.channelId || body.user.id,
-            thread_ts: assetData.messageTs,
-            text: `📁 *FILES UPLOADED TO GOOGLE DRIVE*\n\n${driveLinks}\n\n✅ All files have been successfully uploaded and organized in Google Drive.`,
-            blocks: [
-              {
-                type: 'header',
-                text: {
-                  type: 'plain_text',
-                  text: '📁 FILES UPLOADED TO GOOGLE DRIVE',
-                  emoji: true
-                }
-              },
-              {
-                type: 'section',
-                text: {
-                  type: 'mrkdwn',
-                  text: driveLinks
-                }
-              },
-              {
-                type: 'section',
-                text: {
-                  type: 'mrkdwn',
-                  text: '✅ All files have been successfully uploaded and organized in Google Drive.'
-                }
-              }
-            ]
-          };
-          
-          await client.chat.postMessage(updatedReply);
-        }
-        
-      } catch (driveError) {
-        console.error('❌ Error uploading to Google Drive:', driveError);
-        
-        // Send error notification
-        await client.chat.postEphemeral({
-          channel: body.user.id,
-          user: body.user.id,
-          text: '⚠️ Files were uploaded to Slack but there was an error uploading to Google Drive. Please check the logs.'
-        });
-      }
-    } else {
-      console.warn('⚠️ Google Drive service not initialized - files only uploaded to Slack');
-    }
+    // File link has been processed and thread reply posted
+    console.log('✅ File link processed successfully');
 
   } catch (error) {
     console.error('Error handling file upload:', error);
