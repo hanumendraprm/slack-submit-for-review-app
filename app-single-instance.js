@@ -4,6 +4,9 @@ const express = require('express');
 const GoogleSheetsService = require('./googleSheets');
 const GoogleDriveService = require('./googleDrive');
 
+// Initialize Google Drive service
+const googleDrive = new GoogleDriveService();
+
 // Create Express app for Heroku health checks
 const expressApp = express();
 const port = process.env.PORT || 3000;
@@ -122,13 +125,13 @@ async function initializeGoogleSheets(service, config, appName) {
  * Initialize Google Drive service
  */
 async function initializeGoogleDrive(config, appName) {
-  if (!config.googleDriveFolderId) {
+  if (!config.googleDriveFolderId || !process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
     console.warn(`⚠️  Google Drive integration disabled for ${appName}`);
     return false;
   }
 
   try {
-    await googleDrive.initialize(config.googleDriveFolderId);
+    await googleDrive.initialize(process.env.GOOGLE_SERVICE_ACCOUNT_KEY, config.googleDriveFolderId);
     console.log(`📁 Google Drive service initialized`);
     console.log(`📁 Target folder ID: ${config.googleDriveFolderId}`);
     console.log(`📁 Google Drive integration enabled for ${appName}`);
@@ -1560,12 +1563,108 @@ app.view('upload_resource_modal', async ({ ack, body, client }) => {
       text: `✅ Successfully uploaded ${files.length} file(s)! A reply has been posted in the original thread with all details.`
     });
 
-    // TODO: Implement Google Drive upload functionality for small files
-    // This would involve:
-    // 1. Downloading files from Slack using files.info and files.get
-    // 2. Uploading them to Google Drive in the appropriate subfolder
-    // 3. Organizing by resource type (Video/Image/Document)
-    // 4. Creating asset-specific folders within the resource type folder
+    // Upload files to Google Drive
+    if (googleDrive.isInitialized()) {
+      try {
+        console.log('📁 Starting Google Drive upload process...');
+        
+        const uploadResults = [];
+        
+        for (const file of files) {
+          try {
+            console.log(`📁 Processing file: ${file.name} (${file.id})`);
+            
+            // Get file info from Slack
+            const fileInfo = await client.files.info({
+              file: file.id
+            });
+            
+            if (!fileInfo.ok) {
+              console.error(`❌ Failed to get file info for ${file.id}:`, fileInfo.error);
+              continue;
+            }
+            
+            // Download file from Slack
+            const fileResponse = await client.files.get({
+              file: file.id
+            });
+            
+            if (!fileResponse.ok) {
+              console.error(`❌ Failed to download file ${file.id}:`, fileResponse.error);
+              continue;
+            }
+            
+            // Upload to Google Drive
+            const uploadResult = await googleDrive.uploadFile(
+              Buffer.from(fileResponse.body),
+              file.name,
+              assetData.assetCode,
+              assetData.resourceType,
+              fileInfo.file.mimetype
+            );
+            
+            uploadResults.push(uploadResult);
+            console.log(`✅ File uploaded to Google Drive: ${uploadResult.fileName}`);
+            
+          } catch (fileError) {
+            console.error(`❌ Error processing file ${file.name}:`, fileError);
+          }
+        }
+        
+        if (uploadResults.length > 0) {
+          console.log(`✅ Successfully uploaded ${uploadResults.length} files to Google Drive`);
+          
+          // Update the thread reply with Google Drive links
+          const driveLinks = uploadResults.map(result => 
+            `• <${result.webViewLink}|${result.fileName}>`
+          ).join('\n');
+          
+          const updatedReply = {
+            channel: assetData.channelId || body.user.id,
+            thread_ts: assetData.messageTs,
+            text: `📁 *FILES UPLOADED TO GOOGLE DRIVE*\n\n${driveLinks}\n\n✅ All files have been successfully uploaded and organized in Google Drive.`,
+            blocks: [
+              {
+                type: 'header',
+                text: {
+                  type: 'plain_text',
+                  text: '📁 FILES UPLOADED TO GOOGLE DRIVE',
+                  emoji: true
+                }
+              },
+              {
+                type: 'section',
+                text: {
+                  type: 'mrkdwn',
+                  text: driveLinks
+                }
+              },
+              {
+                type: 'section',
+                text: {
+                  type: 'mrkdwn',
+                  text: '✅ All files have been successfully uploaded and organized in Google Drive.'
+                }
+              }
+            ]
+          };
+          
+          await client.chat.postMessage(updatedReply);
+        }
+        
+      } catch (driveError) {
+        console.error('❌ Error uploading to Google Drive:', driveError);
+        
+        // Send error notification
+        await client.chat.postEphemeral({
+          channel: body.user.id,
+          user: body.user.id,
+          text: '⚠️ Files were uploaded to Slack but there was an error uploading to Google Drive. Please check the logs.'
+        });
+      }
+    } else {
+      console.warn('⚠️ Google Drive service not initialized - files only uploaded to Slack');
+    }
 
   } catch (error) {
     console.error('Error handling file upload:', error);
