@@ -49,7 +49,6 @@ const resourceConfig = {
 // Initialize services
 const googleSheets1 = new GoogleSheetsService();
 const googleSheets2 = new GoogleSheetsService();
-const googleDrive = new GoogleDriveService();
 
 /**
  * Validate required environment variables
@@ -126,12 +125,22 @@ async function initializeGoogleSheets(service, config, appName) {
  */
 async function initializeGoogleDrive(config, appName) {
   if (!config.googleDriveFolderId || !process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
-    console.warn(`⚠️  Google Drive integration disabled for ${appName}`);
+    console.warn(`⚠️  Google Drive integration disabled for ${appName} - missing folder ID or service account key`);
     return false;
   }
 
   try {
-    await googleDrive.initialize(process.env.GOOGLE_SERVICE_ACCOUNT_KEY, config.googleDriveFolderId);
+    // Check if service account key is valid JSON
+    let serviceAccountKey;
+    try {
+      serviceAccountKey = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+    } catch (jsonError) {
+      console.error('❌ Invalid Google Service Account Key format:', jsonError.message);
+      console.warn(`⚠️  Google Drive integration disabled for ${appName} - invalid service account key`);
+      return false;
+    }
+
+    await googleDrive.initialize(serviceAccountKey, config.googleDriveFolderId);
     console.log(`📁 Google Drive service initialized`);
     console.log(`📁 Target folder ID: ${config.googleDriveFolderId}`);
     console.log(`📁 Google Drive integration enabled for ${appName}`);
