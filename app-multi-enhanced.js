@@ -494,8 +494,243 @@ resourceApp.shortcut('request_for_resource', async ({ shortcut, ack, client }) =
   }
 });
 
+// ===== REVIEW WORKFLOW (APP 1) EVENT HANDLERS =====
+
+// Review App: Fetch Details button
+reviewApp.action('fetch_details_btn', async ({ ack, body, client }) => {
+  await ack();
+  
+  try {
+    const assetCode = body.view?.state?.values?.asset_code?.asset_code_input?.value;
+    
+    if (!assetCode || assetCode.trim() === '') {
+      await client.views.update({
+        view_id: body.view.id,
+        view: {
+          ...body.view,
+          blocks: body.view.blocks.map(block => {
+            if (block.block_id === 'fetch_details') {
+              return {
+                ...block,
+                elements: [{
+                  type: 'button',
+                  text: {
+                    type: 'plain_text',
+                    text: 'Please enter an Asset Code first, then click "Fetch Details".',
+                    emoji: true
+                  },
+                  action_id: 'fetch_details_btn',
+                  style: 'danger'
+                }]
+              };
+            }
+            return block;
+          })
+        }
+      });
+      return;
+    }
+
+    // Fetch asset details from Google Sheets
+    const asset = await googleSheets1.getAssetByCode(assetCode.trim());
+    
+    if (!asset) {
+      await client.views.update({
+        view_id: body.view.id,
+        view: {
+          ...body.view,
+          blocks: body.view.blocks.map(block => {
+            if (block.block_id === 'fetch_details') {
+              return {
+                ...block,
+                elements: [{
+                  type: 'button',
+                  text: {
+                    type: 'plain_text',
+                    text: 'Asset not found. Please check the Asset Code.',
+                    emoji: true
+                  },
+                  action_id: 'fetch_details_btn',
+                  style: 'danger'
+                }]
+              };
+            }
+            return block;
+          })
+        }
+      });
+      return;
+    }
+
+    // Update the modal with fetched details
+    const updatedBlocks = body.view.blocks.map(block => {
+      if (block.block_id === 'topic') {
+        return {
+          ...block,
+          element: {
+            ...block.element,
+            initial_value: asset.topic || ''
+          }
+        };
+      }
+      if (block.block_id === 'asset_name') {
+        return {
+          ...block,
+          element: {
+            ...block.element,
+            initial_value: asset.assetName || ''
+          }
+        };
+      }
+      if (block.block_id === 'fetch_details') {
+        return {
+          ...block,
+          elements: [{
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              text: '✅ Details fetched successfully!',
+              emoji: true
+            },
+            action_id: 'fetch_details_btn',
+            style: 'primary'
+          }]
+        };
+      }
+      return block;
+    });
+
+    await client.views.update({
+      view_id: body.view.id,
+      view: {
+        ...body.view,
+        blocks: updatedBlocks
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching details for review app:', error);
+  }
+});
+
+// ===== RESOURCE REQUEST (APP 2) EVENT HANDLERS =====
+
+// Resource App: Fetch Details button
+resourceApp.action('fetch_details_btn_resource', async ({ ack, body, client }) => {
+  await ack();
+  
+  try {
+    const assetCode = body.view?.state?.values?.asset_code?.asset_code_input?.value;
+    
+    if (!assetCode || assetCode.trim() === '') {
+      await client.views.update({
+        view_id: body.view.id,
+        view: {
+          ...body.view,
+          blocks: body.view.blocks.map(block => {
+            if (block.block_id === 'fetch_details') {
+              return {
+                ...block,
+                elements: [{
+                  type: 'button',
+                  text: {
+                    type: 'plain_text',
+                    text: 'Please enter an Asset Code first, then click "Fetch Details".',
+                    emoji: true
+                  },
+                  action_id: 'fetch_details_btn_resource',
+                  style: 'danger'
+                }]
+              };
+            }
+            return block;
+          })
+        }
+      });
+      return;
+    }
+
+    // Fetch asset details from Google Sheets
+    const asset = await googleSheets2.getAssetByCode(assetCode.trim());
+    
+    if (!asset) {
+      await client.views.update({
+        view_id: body.view.id,
+        view: {
+          ...body.view,
+          blocks: body.view.blocks.map(block => {
+            if (block.block_id === 'fetch_details') {
+              return {
+                ...block,
+                elements: [{
+                  type: 'button',
+                  text: {
+                    type: 'plain_text',
+                    text: 'Asset not found. Please check the Asset Code.',
+                    emoji: true
+                  },
+                  action_id: 'fetch_details_btn_resource',
+                  style: 'danger'
+                }]
+              };
+            }
+            return block;
+          })
+        }
+      });
+      return;
+    }
+
+    // Update the modal with fetched details
+    const updatedBlocks = body.view.blocks.map(block => {
+      if (block.block_id === 'topic') {
+        return {
+          ...block,
+          element: {
+            ...block.element,
+            initial_value: asset.topic || ''
+          }
+        };
+      }
+      if (block.block_id === 'asset_name') {
+        return {
+          ...block,
+          element: {
+            ...block.element,
+            initial_value: asset.assetName || ''
+          }
+        };
+      }
+      if (block.block_id === 'fetch_details') {
+        return {
+          ...block,
+          elements: [{
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              text: '✅ Details fetched successfully!',
+              emoji: true
+            },
+            action_id: 'fetch_details_btn_resource',
+            style: 'primary'
+          }]
+        };
+      }
+      return block;
+    });
+
+    await client.views.update({
+      view_id: body.view.id,
+      view: {
+        ...body.view,
+        blocks: updatedBlocks
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching details for resource app:', error);
+  }
+});
+
 // Start both apps
-async function startApps() {
   try {
     // Validate environment for both apps
     validateAppEnvironment(reviewConfig, 'Review Workflow');

@@ -40,19 +40,62 @@ class GoogleDriveService {
   }
 
   /**
-   * Upload file to Google Drive
+   * Get or create subfolder by type
    */
-  async uploadFile(fileBuffer, fileName, assetCode, mimeType = null) {
+  async getOrCreateSubfolder(folderType) {
     try {
       if (!this.drive || !this.folderId) {
         throw new Error('Google Drive service not initialized');
       }
 
+      // First, try to find existing subfolder
+      const response = await this.drive.files.list({
+        q: `'${this.folderId}' in parents and name='${folderType}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: 'files(id,name)'
+      });
+
+      if (response.data.files && response.data.files.length > 0) {
+        return response.data.files[0].id;
+      }
+
+      // Create new subfolder if it doesn't exist
+      const folderMetadata = {
+        name: folderType,
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: [this.folderId],
+        description: `Resources of type: ${folderType}`
+      };
+
+      const createResponse = await this.drive.files.create({
+        resource: folderMetadata,
+        fields: 'id,name'
+      });
+
+      console.log(`📁 Created subfolder: ${folderType} (ID: ${createResponse.data.id})`);
+      return createResponse.data.id;
+    } catch (error) {
+      console.error(`❌ Failed to get/create subfolder ${folderType}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Upload file to Google Drive in appropriate subfolder
+   */
+  async uploadFile(fileBuffer, fileName, assetCode, resourceType, mimeType = null) {
+    try {
+      if (!this.drive || !this.folderId) {
+        throw new Error('Google Drive service not initialized');
+      }
+
+      // Get the appropriate subfolder based on resource type
+      const subfolderId = await this.getOrCreateSubfolder(resourceType);
+
       // Create file metadata
       const fileMetadata = {
         name: `${assetCode}_${fileName}`,
-        parents: [this.folderId],
-        description: `Resource for asset: ${assetCode}`
+        parents: [subfolderId], // Upload to subfolder instead of main folder
+        description: `Resource for asset: ${assetCode} (Type: ${resourceType})`
       };
 
       // Create media
@@ -68,13 +111,14 @@ class GoogleDriveService {
         fields: 'id,name,webViewLink,webContentLink'
       });
 
-      console.log(`📁 File uploaded: ${response.data.name} (ID: ${response.data.id})`);
+      console.log(`📁 File uploaded to ${resourceType} folder: ${response.data.name} (ID: ${response.data.id})`);
       
       return {
         fileId: response.data.id,
         fileName: response.data.name,
         webViewLink: response.data.webViewLink,
-        webContentLink: response.data.webContentLink
+        webContentLink: response.data.webContentLink,
+        folderType: resourceType
       };
     } catch (error) {
       console.error('❌ Failed to upload file to Google Drive:', error);
@@ -85,7 +129,7 @@ class GoogleDriveService {
   /**
    * Upload multiple files for an asset
    */
-  async uploadFiles(files, assetCode) {
+  async uploadFiles(files, assetCode, resourceType) {
     try {
       const uploadResults = [];
       
@@ -94,6 +138,7 @@ class GoogleDriveService {
           file.buffer,
           file.name,
           assetCode,
+          resourceType,
           file.mimetype
         );
         uploadResults.push(result);
