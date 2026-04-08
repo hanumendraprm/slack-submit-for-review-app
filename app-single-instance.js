@@ -38,8 +38,10 @@ const reviewConfig = {
 };
 
 const resourceConfig = {
-  channelId: process.env.CHANNEL_ID_APP2 || null,
-  channelName: process.env.CHANNEL_NAME_APP2,
+  // Allow running "resource request" flow even when only a single
+  // channel is configured (common in smaller workspaces).
+  channelId: process.env.CHANNEL_ID_APP2 || process.env.CHANNEL_ID_APP1 || process.env.CHANNEL_ID || null,
+  channelName: process.env.CHANNEL_NAME_APP2 || process.env.CHANNEL_NAME_APP1 || process.env.CHANNEL_NAME,
   googleSheetId: process.env.GOOGLE_SHEET_ID_APP2,
   googleServiceAccountKey: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_APP2,
   googleDriveFolderId: process.env.GOOGLE_DRIVE_FOLDER_ID_APP2,
@@ -54,11 +56,18 @@ const googleSheets2 = new GoogleSheetsService();
  * Validate required environment variables
  */
 function validateEnvironment() {
-  const required = ['SLACK_BOT_TOKEN', 'SLACK_SIGNING_SECRET', 'SLACK_APP_TOKEN'];
-  const missing = required.filter(key => !process.env[key]);
-  
+  // Support either "single app" vars or the APP1-prefixed vars.
+  const slackToken = process.env.SLACK_BOT_TOKEN_APP1 || process.env.SLACK_BOT_TOKEN;
+  const slackSigningSecret = process.env.SLACK_SIGNING_SECRET_APP1 || process.env.SLACK_SIGNING_SECRET;
+  const slackAppToken = process.env.SLACK_APP_TOKEN_APP1 || process.env.SLACK_APP_TOKEN;
+
+  const missing = [];
+  if (!slackToken) missing.push('SLACK_BOT_TOKEN (or SLACK_BOT_TOKEN_APP1)');
+  if (!slackSigningSecret) missing.push('SLACK_SIGNING_SECRET (or SLACK_SIGNING_SECRET_APP1)');
+  if (!slackAppToken) missing.push('SLACK_APP_TOKEN (or SLACK_APP_TOKEN_APP1)');
+
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    throw new Error(`Missing required Slack environment variables: ${missing.join(', ')}`);
   }
   
   if (!reviewConfig.channelId && !reviewConfig.channelName) {
@@ -66,7 +75,7 @@ function validateEnvironment() {
   }
 
   if (!resourceConfig.channelId && !resourceConfig.channelName) {
-    throw new Error('Either CHANNEL_ID_APP2 or CHANNEL_NAME_APP2 must be set');
+    throw new Error('Either CHANNEL_ID_APP2 or CHANNEL_NAME_APP2 must be set (or set a shared CHANNEL_ID/CHANNEL_NAME)');
   }
 }
 
